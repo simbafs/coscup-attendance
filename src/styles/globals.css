@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.container {
+  @apply px-4 mx-auto;
+  max-width: 800px;
+  margin-top: 4rem;
+}
