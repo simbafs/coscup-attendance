@@ -3,6 +3,6 @@
 let data = {}
 
 export default function handler(req, res) {
-  data = req.body
-  res.status(200).json({ status: 'ok' })
+	data = req.body
+	res.status(200).json({ status: 'ok' })
 }
