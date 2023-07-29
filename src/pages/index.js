@@ -2,7 +2,7 @@ import Head from "next/head";
 import { useReducer, useState } from "react";
 
 export async function getStaticProps() {
-  let data = await fetch("http://localhost:3000/session.json").then((res) =>
+  let data = await fetch("https://coscup.org/2023/json/session.json").then((res) =>
     res.json()
   );
 
@@ -66,12 +66,20 @@ export default function Home({ data }) {
           製播組統計議程人數統計
         </h1>
         <div className="text-center my-4">
-          <select value={day} onChange={(e) => setDay(e.target.value)} className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4">
+          <select
+            value={day}
+            onChange={(e) => setDay(e.target.value)}
+            className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4"
+          >
             <option value={29}>7/29</option>
             <option value={30}>7/30</option>
           </select>
           的
-          <select value={room} onChange={(e) => setRoom(e.target.value)} className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4">
+          <select
+            value={room}
+            onChange={(e) => setRoom(e.target.value)}
+            className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4"
+          >
             {rooms.map((room) => (
               <option key={room} value={room}>
                 {room}
