@@ -20,11 +20,19 @@ export async function getStaticProps() {
 
 export default function Home({ data, attendanceInit }) {
 	const rooms = Array.from(new Set(data.sessions.map(i => i.room)))
-	const [day, setDay] = useState(29)
+	const [day, setDay] = useReducer((oldDay, newDay) => {
+		if (newDay == 29 || newDay == 30) {
+			localStorage.setItem('day', newDay)
+			return newDay
+		}
+	}, 29)
 	const [room, setRoom] = useReducer((oldRoom, newRoom) => {
 		if (rooms.includes(newRoom)) {
+			localStorage.setItem('room', newRoom)
 			return newRoom
 		}
+
+		localStorage.setItem('room', oldRoom)
 		return oldRoom
 	}, 'AU')
 
@@ -65,6 +73,23 @@ export default function Home({ data, attendanceInit }) {
 
 		setDiff([])
 	}, [debonseedAttendance])
+
+	useEffect(() => {
+		if (!localStorage) return
+
+		let day = localStorage.getItem('day')
+		let room = localStorage.getItem('room')
+
+		console.log({ day, room })
+
+		if (day) {
+			setDay(day)
+		}
+		if (room) {
+			setRoom(room)
+
+		}
+	}, [])
 
 	let sessions = groupBy(
 		data.sessions.filter(item => new Date(item.start).getDate() == day),
@@ -159,14 +184,14 @@ function Session({ session, attendance, setAttendance }) {
 	return (
 		<>
 			<div className="w-full flex my-4 flex-nowrap">
-				<span className="w-[100px] py-2 text-right">
-					{getFormatedDate(session.start)}-{getFormatedDate(session.end)}
+				<span className="w-[110px] py-2 text-right break-words">
+					{getFormatedDate(session.start)} - {getFormatedDate(session.end)}
 				</span>
 				<input
 					type="number"
 					value={attendance}
 					onChange={(e) => setAttendance(e.target.value)}
-					className="w-16 mx-6 mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1"
+					className="w-24 mx-6 mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1"
 				/>
 				<span className="py-2 max-w-lg"> {session.zh.title}</span>
 			</div>
