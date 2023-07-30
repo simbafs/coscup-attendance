@@ -87,33 +87,51 @@ export default function Home({ data, attendanceInit }) {
 					type="image/svg+xml"
 				/>
 			</Head>
-			<h1>製播組統計議程人數統計</h1>
-			<select value={day} onChange={e => setDay(e.target.value)}>
-				<option value={29}>29</option>
-				<option value={30}>30</option>
-			</select>
-			<select value={room} onChange={e => setRoom(e.target.value)}>
-				{rooms.map(room => (
-					<option key={room} value={room}>
-						{room}
-					</option>
+			<div className="container">
+				<h1 className="text-center text-2xl font-semibold">
+					製播組統計議程人數統計
+				</h1>
+				<div className="text-center my-4">
+					<select
+						value={day}
+						onChange={(e) => setDay(e.target.value)}
+						className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4"
+					>
+						<option value={29}>7/29</option>
+						<option value={30}>7/30</option>
+					</select>
+					的
+					<select
+						value={room}
+						onChange={(e) => setRoom(e.target.value)}
+						className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4"
+					>
+						{rooms.map((room) => (
+							<option key={room} value={room}>
+								{room}
+							</option>
+						))}
+					</select>
+					廳
+				</div>
+				<hr className="my-4" />
+
+				{sessions.map((s) => (
+					<Session
+						key={s.id}
+						session={s}
+						attendance={attendance[day][s.room][s.id]}
+						setAttendance={(n) =>
+							updateAttendance({
+								day: day,
+								room: s.room,
+								id: s.id,
+								attendance: n,
+							})
+						}
+					/>
 				))}
-			</select>
-			{sessions.map(s => (
-				<Session
-					key={s.id}
-					session={s}
-					attendance={attendance[day][s.room][s.id]}
-					setAttendance={n =>
-						updateAttendance({
-							day: day,
-							room: s.room,
-							id: s.id,
-							attendance: n,
-						})
-					}
-				/>
-			))}
+			</div>
 		</>
 	)
 }
@@ -140,18 +158,18 @@ function getFormatedDate(dateStr) {
 function Session({ session, attendance, setAttendance }) {
 	return (
 		<>
-			<div className="w-screen space-x-2">
-				<span>
-					{getFormatedDate(session.start)}-
-					{getFormatedDate(session.end)}
+			<div className="w-full flex my-4 flex-nowrap">
+				<span className="w-[100px] py-2 text-right">
+					{getFormatedDate(session.start)}-{getFormatedDate(session.end)}
 				</span>
-				<span>{session.zh.title}</span>
 				<input
 					type="number"
 					value={attendance}
-					onChange={e => setAttendance(e.target.value)}
+					onChange={(e) => setAttendance(e.target.value)}
+					className="w-16 mx-6 mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1"
 				/>
+				<span className="py-2 max-w-lg"> {session.zh.title}</span>
 			</div>
 		</>
-	)
+	);
 }
