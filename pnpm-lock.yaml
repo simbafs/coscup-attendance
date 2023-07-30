@@ -20,9 +20,15 @@ dependencies:
     react-dom:
         specifier: 18.2.0
         version: 18.2.0(react@18.2.0)
+    swr:
+        specifier: ^2.2.0
+        version: 2.2.0(react@18.2.0)
     tailwindcss:
         specifier: 3.3.3
         version: 3.3.3
+    usehooks-ts:
+        specifier: ^2.9.1
+        version: 2.9.1(react-dom@18.2.0)(react@18.2.0)
 
 packages:
     /@alloc/quick-lru@5.2.0:
@@ -1099,6 +1105,18 @@ packages:
         engines: { node: '>= 0.4' }
         dev: false
 
+    /swr@2.2.0(react@18.2.0):
+        resolution:
+            {
+                integrity: sha512-AjqHOv2lAhkuUdIiBu9xbuettzAzWXmCEcLONNKJRba87WAefz8Ca9d6ds/SzrPc235n1IxWYdhJ2zF3MNUaoQ==,
+            }
+        peerDependencies:
+            react: ^16.11.0 || ^17.0.0 || ^18.0.0
+        dependencies:
+            react: 18.2.0
+            use-sync-external-store: 1.2.0(react@18.2.0)
+        dev: false
+
     /tailwindcss@3.3.3:
         resolution:
             {
@@ -1188,6 +1206,31 @@ packages:
             browserslist: 4.21.9
             escalade: 3.1.1
             picocolors: 1.0.0
+        dev: false
+
+    /use-sync-external-store@1.2.0(react@18.2.0):
+        resolution:
+            {
+                integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==,
+            }
+        peerDependencies:
+            react: ^16.8.0 || ^17.0.0 || ^18.0.0
+        dependencies:
+            react: 18.2.0
+        dev: false
+
+    /usehooks-ts@2.9.1(react-dom@18.2.0)(react@18.2.0):
+        resolution:
+            {
+                integrity: sha512-2FAuSIGHlY+apM9FVlj8/oNhd+1y+Uwv5QNkMQz1oSfdHk4PXo1qoCw9I5M7j0vpH8CSWFJwXbVPeYDjLCx9PA==,
+            }
+        engines: { node: '>=16.15.0', npm: '>=8' }
+        peerDependencies:
+            react: ^16.8.0  || ^17.0.0 || ^18.0.0
+            react-dom: ^16.8.0  || ^17.0.0 || ^18.0.0
+        dependencies:
+            react: 18.2.0
+            react-dom: 18.2.0(react@18.2.0)
         dev: false
 
     /util-deprecate@1.0.2:

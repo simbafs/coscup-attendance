@@ -1,44 +1,70 @@
 import Head from 'next/head'
-import { useReducer, useState } from 'react'
+import { useReducer, useState, useEffect } from 'react'
+import { useDebounce } from 'usehooks-ts'
 
 export async function getStaticProps() {
-	let data = await fetch('http://localhost:3000/session.json').then(res =>
-		res.json()
+	let data = await fetch('https://coscup.org/2023/json/session.json').then(
+		res => res.json()
 	)
+	let attendanceInit = await fetch('http://localhost:3000/api/attendance', {
+		method: 'GET',
+	}).then(res => res.json())
 
 	return {
 		props: {
 			data,
+			attendanceInit,
 		},
 	}
 }
 
-export default function Home({ data }) {
-	let rooms = Array.from(new Set(data.sessions.map(i => i.room)))
-	let [day, setDay] = useState(29)
-	let [room, setRoom] = useReducer((oldRoom, newRoom) => {
+export default function Home({ data, attendanceInit }) {
+	const rooms = Array.from(new Set(data.sessions.map(i => i.room)))
+	const [day, setDay] = useState(29)
+	const [room, setRoom] = useReducer((oldRoom, newRoom) => {
 		if (rooms.includes(newRoom)) {
 			return newRoom
 		}
 		return oldRoom
 	}, 'AU')
 
-	// update = {day: 29, room: 'AU', id: 'V8F9VH', attendance: 10}
-	let [attendance, updateAttendance] = useReducer(
-		(curr, update) => {
-			let r = {
-				29: curr[29],
-				30: curr[30],
-			}
-			r[update.day][update.room][update.id] = update.attendance
+	const [diff, setDiff] = useState([])
 
-			return r
-		},
-		{
-			29: Object.fromEntries(rooms.map(i => [i, {}])),
-			30: Object.fromEntries(rooms.map(i => [i, {}])),
+	// update = {day: 29, room: 'AU', id: 'V8F9VH', attendance: 10}
+	const [attendance, updateAttendance] = useReducer((curr, update) => {
+		let r = {
+			29: curr[29],
+			30: curr[30],
 		}
-	)
+		r[update.day][update.room][update.id] = update.attendance
+
+		setDiff(diff => diff.concat(update))
+
+		return r
+	}, attendanceInit)
+	const debonseedAttendance = useDebounce(attendance, 1000)
+
+	useEffect(() => {
+		let filterdDiff = diff.reduce((arr, item) => {
+			const pre = arr.findIndex(i => i.id == item.id)
+			if (pre >= 0) {
+				arr[pre] = item
+			} else {
+				arr = arr.concat(item)
+			}
+
+			return arr
+		}, [])
+
+		fetch('http://localhost:3000/api/attendance', {
+			method: 'POST',
+			body: JSON.stringify(filterdDiff),
+		})
+			.then(res => res.json())
+			.then(console.log)
+
+		setDiff([])
+	}, [debonseedAttendance])
 
 	let sessions = groupBy(
 		data.sessions.filter(item => new Date(item.start).getDate() == day),
