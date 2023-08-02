@@ -3,20 +3,30 @@ import fs from 'fs'
 let attendance = {}
 let diffs = []
 
+const file = './data/data.json'
+
 async function loadData() {
 	let data = {}
 	try {
-		data = JSON.parse(fs.readFileSync('./data.json', 'utf8'))
+		if (!fs.existsSync(file)) {
+			fs.writeFileSync(file, '{}')
+		}
+		data = JSON.parse(fs.readFileSync(file, 'utf8'))
 	} catch (e) {
 		console.error(e)
 	}
-	attendance = Object.keys(data?.attendance || {}).length > 0 ? data.attendance : await getDefaultAttendance()
+	attendance =
+		Object.keys(data?.attendance || {}).length > 0
+			? data.attendance
+			: await getDefaultAttendance()
 	diffs = data?.diffs?.length > 0 ? data.diffs : []
+	console.log('loaded data from', file)
 }
 
 function saveData() {
 	const data = JSON.stringify({ attendance, diffs })
-	fs.writeFileSync('./data.json', data)
+	fs.writeFileSync(file, data)
+	console.log('saved data to', file)
 }
 
 async function getDefaultAttendance() {

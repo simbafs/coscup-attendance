@@ -5,31 +5,45 @@ import useSWR from 'swr'
 
 export default function Home() {
 	const fetcher = url => fetch(url).then(res => res.json())
-	const { data, error } = useSWR('https://coscup.org/2023/json/session.json', fetcher)
-	const { data: attendanceInit, error: error2 } = useSWR('/api/attendance', fetcher)
+	const { data, error } = useSWR(
+		'https://coscup.org/2023/json/session.json',
+		fetcher
+	)
+	const { data: attendanceInit, error: error2 } = useSWR(
+		'/api/attendance',
+		fetcher
+	)
 
-	return <>
-		<Head>
-			<title>製播組統計議程人數統計</title>
-			<link
-				href="https://coscup.org/2023/favicon.svg"
-				rel="icon"
-				type="image/svg+xml"
-			/>
-		</Head>
-		<div className="container">
-			<h1 className="text-center text-2xl font-semibold">
-				製播組統計議程人數統計
-			</h1>
-			{(error || error2) && <div>
-				<h1>Fail to laod data:</h1>
-				<pre>{JSON.stringify({ error, error2 }, null, 2)}</pre>
-			</div>}
-			{!data || !attendanceInit && <div className="text-center my-4">Loading...</div>}
-			{data && attendanceInit && <Table data={data} attendanceInit={attendanceInit} />}
-		</div>
-	</>
-
+	return (
+		<>
+			<Head>
+				<title>製播組統計議程人數統計</title>
+				<link
+					href="https://coscup.org/2023/favicon.svg"
+					rel="icon"
+					type="image/svg+xml"
+				/>
+			</Head>
+			<div className="container">
+				<h1 className="text-center text-2xl font-semibold">
+					製播組統計議程人數統計
+				</h1>
+				{(error || error2) && (
+					<div>
+						<h1>Fail to laod data:</h1>
+						<pre>{JSON.stringify({ error, error2 }, null, 2)}</pre>
+					</div>
+				)}
+				{!data ||
+					(!attendanceInit && (
+						<div className="text-center my-4">Loading...</div>
+					))}
+				{data && attendanceInit && (
+					<Table data={data} attendanceInit={attendanceInit} />
+				)}
+			</div>
+		</>
+	)
 }
 
 function Table({ data, attendanceInit }) {
@@ -159,7 +173,6 @@ function Table({ data, attendanceInit }) {
 						}
 					/>
 				))}
-
 			</div>
 		</>
 	)
