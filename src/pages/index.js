@@ -26,7 +26,7 @@ export default function Home() {
 			</Head>
 			<div className="container">
 				<h1 className="text-center text-2xl font-semibold">
-					製播組統計議程人數統計
+					製播組議程人數統計
 				</h1>
 				{(error || error2) && (
 					<div>
