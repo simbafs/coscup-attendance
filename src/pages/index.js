@@ -1,24 +1,38 @@
 import Head from 'next/head'
 import { useReducer, useState, useEffect } from 'react'
 import { useDebounce } from 'usehooks-ts'
+import useSWR from 'swr'
 
-export async function getStaticProps() {
-	let data = await fetch('https://coscup.org/2023/json/session.json').then(
-		res => res.json()
-	)
-	let attendanceInit = await fetch('http://localhost:3000/api/attendance', {
-		method: 'GET',
-	}).then(res => res.json())
+export default function Home() {
+	const fetcher = url => fetch(url).then(res => res.json())
+	const { data, error } = useSWR('https://coscup.org/2023/json/session.json', fetcher)
+	const { data: attendanceInit, error: error2 } = useSWR('/api/attendance', fetcher)
 
-	return {
-		props: {
-			data,
-			attendanceInit,
-		},
-	}
+	return <>
+		<Head>
+			<title>製播組統計議程人數統計</title>
+			<link
+				href="https://coscup.org/2023/favicon.svg"
+				rel="icon"
+				type="image/svg+xml"
+			/>
+		</Head>
+		<div className="container">
+			<h1 className="text-center text-2xl font-semibold">
+				製播組統計議程人數統計
+			</h1>
+			{(error || error2) && <div>
+				<h1>Fail to laod data:</h1>
+				<pre>{JSON.stringify({ error, error2 }, null, 2)}</pre>
+			</div>}
+			{!data || !attendanceInit && <div className="text-center my-4">Loading...</div>}
+			{data && attendanceInit && <Table data={data} attendanceInit={attendanceInit} />}
+		</div>
+	</>
+
 }
 
-export default function Home({ data, attendanceInit }) {
+function Table({ data, attendanceInit }) {
 	const rooms = Array.from(new Set(data.sessions.map(i => i.room)))
 	const [day, setDay] = useReducer((oldDay, newDay) => {
 		if (newDay == 29 || newDay == 30) {
@@ -104,60 +118,48 @@ export default function Home({ data, attendanceInit }) {
 
 	return (
 		<>
-			<Head>
-				<title>製播組統計議程人數統計</title>
-				<link
-					href="https://coscup.org/2023/favicon.svg"
-					rel="icon"
-					type="image/svg+xml"
-				/>
-			</Head>
-			<div className="container">
-				<h1 className="text-center text-2xl font-semibold">
-					製播組統計議程人數統計
-				</h1>
-				<div className="text-center my-4">
-					<select
-						value={day}
-						onChange={e => setDay(e.target.value)}
-						className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4"
-					>
-						<option value={29}>7/29</option>
-						<option value={30}>7/30</option>
-					</select>
-					的
-					<select
-						value={room}
-						onChange={e => setRoom(e.target.value)}
-						className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4"
-					>
-						{rooms.map(room => (
-							<option key={room} value={room}>
-								{room}
-							</option>
-						))}
-					</select>
-					廳
-				</div>
-				<hr className="my-4" />
-
-				<div className="grid grid-cols-[110px_100px_4fr] lg:gap-2 gap-4">
-					{sessions.map(s => (
-						<Session
-							key={s.id}
-							session={s}
-							attendance={attendance[day][s.room][s.id]}
-							setAttendance={n =>
-								updateAttendance({
-									day: day,
-									room: s.room,
-									id: s.id,
-									attendance: n,
-								})
-							}
-						/>
+			<div className="text-center my-4">
+				<select
+					value={day}
+					onChange={e => setDay(e.target.value)}
+					className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4"
+				>
+					<option value={29}>7/29</option>
+					<option value={30}>7/30</option>
+				</select>
+				的
+				<select
+					value={room}
+					onChange={e => setRoom(e.target.value)}
+					className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4"
+				>
+					{rooms.map(room => (
+						<option key={room} value={room}>
+							{room}
+						</option>
 					))}
-				</div>
+				</select>
+				廳
+			</div>
+			<hr className="my-4" />
+
+			<div className="grid grid-cols-[110px_100px_4fr] lg:gap-2 gap-4">
+				{sessions.map(s => (
+					<Session
+						key={s.id}
+						session={s}
+						attendance={attendance[day][s.room][s.id]}
+						setAttendance={n =>
+							updateAttendance({
+								day: day,
+								room: s.room,
+								id: s.id,
+								attendance: n,
+							})
+						}
+					/>
+				))}
+
 			</div>
 		</>
 	)
