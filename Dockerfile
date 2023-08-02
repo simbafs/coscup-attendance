@@ -10,4 +10,5 @@ COPY . /app
 RUN pnpm build
 
 EXPOSE 3000
+EnV NODE_ENV=production
 CMD ["pnpm", "start", "-p", "3000"]

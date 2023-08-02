@@ -93,7 +93,7 @@ function Table({ data, attendanceInit }) {
 			return arr
 		}, [])
 
-		fetch('http://localhost:3000/api/attendance', {
+		fetch('/api/attendance', {
 			method: 'POST',
 			body: JSON.stringify(filterdDiff),
 		})
