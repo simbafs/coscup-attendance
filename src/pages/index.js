@@ -2,6 +2,7 @@ import Head from 'next/head'
 import { useReducer, useState, useEffect } from 'react'
 import { useDebounce } from 'usehooks-ts'
 import useSWR from 'swr'
+import useLocalStorageReducer from '@/libs/useLocalStorageReducer'
 
 export default function Home() {
 	const fetcher = url => fetch(url).then(res => res.json())
@@ -28,18 +29,15 @@ export default function Home() {
 				<h1 className="text-center text-2xl font-semibold">
 					製播組議程人數統計
 				</h1>
-				{(error || error2) && (
+				{error || error2 ? (
 					<div>
 						<h1>Fail to laod data:</h1>
 						<pre>{JSON.stringify({ error, error2 }, null, 2)}</pre>
 					</div>
-				)}
-				{!data ||
-					(!attendanceInit && (
-						<div className="text-center my-4">Loading...</div>
-					))}
-				{data && attendanceInit && (
+				) : data && attendanceInit ? (
 					<Table data={data} attendanceInit={attendanceInit} />
+				) : (
+					<div className="text-center my-4">Loading...</div>
 				)}
 			</div>
 		</>
@@ -48,20 +46,16 @@ export default function Home() {
 
 function Table({ data, attendanceInit }) {
 	const rooms = Array.from(new Set(data.sessions.map(i => i.room)))
-	const [day, setDay] = useReducer((oldDay, newDay) => {
+	const [day, setDay] = useLocalStorageReducer('day', (oldDay, newDay) => {
 		if (newDay == 29 || newDay == 30) {
-			localStorage.setItem('day', newDay)
 			return newDay
 		}
 		return oldDay
 	}, 29)
-	const [room, setRoom] = useReducer((oldRoom, newRoom) => {
+	const [room, setRoom] = useLocalStorageReducer('room', (oldRoom, newRoom) => {
 		if (rooms.includes(newRoom)) {
-			localStorage.setItem('room', newRoom)
 			return newRoom
 		}
-
-		localStorage.setItem('room', oldRoom)
 		return oldRoom
 	}, 'AU')
 
@@ -109,8 +103,6 @@ function Table({ data, attendanceInit }) {
 		let day = localStorage.getItem('day')
 		let room = localStorage.getItem('room')
 
-		console.log({ day, room })
-
 		if (day) {
 			setDay(day)
 		}
@@ -136,7 +128,7 @@ function Table({ data, attendanceInit }) {
 				<select
 					value={day}
 					onChange={e => setDay(e.target.value)}
-					className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4"
+					className="box"
 				>
 					<option value={29}>7/29</option>
 					<option value={30}>7/30</option>
@@ -145,7 +137,7 @@ function Table({ data, attendanceInit }) {
 				<select
 					value={room}
 					onChange={e => setRoom(e.target.value)}
-					className="mt-1 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 mx-4"
+					className="box"
 				>
 					{rooms.map(room => (
 						<option key={room} value={room}>
@@ -211,7 +203,7 @@ function Session({ session, attendance, setAttendance }) {
 				value={attendance}
 				min={0}
 				onChange={e => setAttendance(e.target.value)}
-				className="px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1"
+				className="box"
 			/>
 			<div className="my-auto">
 				<span className="text-right break-words">
