@@ -43,9 +43,43 @@ export default function Home() {
 		</>
 	)
 }
+function customSort(a, b) {
+	// Check if 'AU' or 'RB 105' are present in the array
+	const isAFirst = a === "AU" || a === "RB 105";
+	const isBFirst = b === "AU" || b === "RB 105";
 
+	// Sort 'AU' or 'RB 105' before others
+	if (isAFirst && !isBFirst) {
+		return -1;
+	} else if (!isAFirst && isBFirst) {
+		return 1;
+	}
+
+	// Sort other elements based on XXX in `TR XXX`
+	const aText = a.replace('TR ', '');
+	const bText = b.replace('TR ', '');
+
+	let aNum
+	let bNum
+
+	if (aText.includes('-')) {
+		aNum = Number(`${aText.split('-')[0]}.${aText.split('-')[1]}`)
+	} else {
+		aNum = Number(aText)
+	}
+
+
+	if (bText.includes('-')) {
+		bNum = Number(`${bText.split('-')[0]}.${bText.split('-')[1]}`)
+	} else {
+		bNum = Number(bText)
+	}
+
+	return aNum - bNum;
+}
 function Table({ data, attendanceInit }) {
-	const rooms = Array.from(new Set(data.sessions.map(i => i.room)))
+	const rooms = Array.from(new Set(data.sessions.map(i => i.room))).sort(customSort)
+
 	const [day, setDay] = useLocalStorageReducer('day', (oldDay, newDay) => {
 		if (newDay == 29 || newDay == 30) {
 			return newDay
