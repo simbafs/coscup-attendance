@@ -1,13 +1,8 @@
-import fs from 'fs'
+import NewDB from "@/libs/db"
+
+const db = await NewDB('./data/data.json')
 
 export default function handler(req, res) {
-	try {
-		const data = JSON.parse(fs.readFileSync('data.json', 'utf8'))
-		res.status(200).json(data)
-	} catch (e) {
-		res.status(400).json({
-			status: 'error',
-			error: e,
-		})
-	}
+	const data = db.getJSON()
+	return res.status(200).json(data)
 }
