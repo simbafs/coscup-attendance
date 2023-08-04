@@ -1,8 +1,9 @@
 import NewDB from '@/libs/db'
+import { getIO } from '@/libs/websocket'
 
 const file = './data/data.json'
 const db = await NewDB(file, diff => {
-	console.log('db updated', diff)
+	getIO().emit('attendance', JSON.stringify(diff))
 })
 
 // update = {day: 29, room: 'AU', id: 'V8F9VH', attendance: 10}

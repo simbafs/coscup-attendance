@@ -3,20 +3,25 @@ import { useReducer, useState, useEffect } from 'react'
 import { useDebounce } from 'usehooks-ts'
 import useSWR from 'swr'
 import useLocalStorageReducer from '@/libs/useLocalStorageReducer'
+import { io } from 'socket.io-client'
+import shouldParse from '@/libs/shouldParse'
 
 export default function Home() {
-	const { data, error } = useSWR("https://coscup.org/2023/json/session.json", url => fetch(url).then(res => res.json()))
+	const { data, error } = useSWR(
+		'https://coscup.org/2023/json/session.json',
+		url => fetch(url).then(res => res.json())
+	)
+	const [socket, setSocket] = useState(undefined)
 	const [attendance, updateAttendance] = useReducer((state, action) => {
 		if (action.overwrite) {
 			return action.data
 		}
 		if (!state) return state
 
-		const r = { ...state, }
+		const r = { ...state }
 		r[action.day][action.room][action.id] = Number(action.attendance)
 		return r
 	}, undefined)
-
 
 	// init attendance
 	useEffect(() => {
@@ -25,6 +30,33 @@ export default function Home() {
 			.then(res => res.json())
 			.then(data => updateAttendance({ data, overwrite: true }))
 			.then(() => console.log('attendance loaded'))
+	}, [])
+
+	useEffect(() => {
+		const socket = io()
+
+		// log socket connection
+		socket.on('connect', () => {
+			console.log('SOCKET CONNECTED!', socket.id)
+			setSocket(socket)
+		})
+
+		socket.on('disconnect', () => {
+			console.log("SOCKET DISCONNECTED!")
+			setSocket(undefined)
+		})
+
+		socket.on('attendance', data => {
+			const diffs = shouldParse(data, [])
+			for (let diff of diffs) {
+				updateAttendance(diff)
+			}
+		})
+
+		// socket disconnet onUnmount if exists
+		if (socket) return () => {
+			socket.disconnect()
+		}
 	}, [])
 
 	return (
@@ -40,6 +72,11 @@ export default function Home() {
 			<div className="container">
 				<h1 className="text-center text-2xl font-semibold">
 					製播組議程人數統計
+					{socket ? (
+						<p className="text-green-500" key="connect">Connected id: {socket.id}</p>
+					) : (
+						<p className="text-red-500" key="disconnect">Disconnected</p>
+					)}
 				</h1>
 				{error ? (
 					<div>
@@ -47,7 +84,11 @@ export default function Home() {
 						<pre>{JSON.stringify(error, null, 2)}</pre>
 					</div>
 				) : data && attendance ? (
-					<Table sessions={data.sessions} attendance={attendance} updateAttendance={updateAttendance} />
+					<Table
+						sessions={data.sessions}
+						attendance={attendance}
+						updateAttendance={updateAttendance}
+					/>
 				) : (
 					<div className="text-center my-4">Loading...</div>
 				)}
@@ -58,19 +99,19 @@ export default function Home() {
 
 function customSort(a, b) {
 	// Check if 'AU' or 'RB 105' are present in the array
-	const isAFirst = a === "AU" || a === "RB 105";
-	const isBFirst = b === "AU" || b === "RB 105";
+	const isAFirst = a === 'AU' || a === 'RB 105'
+	const isBFirst = b === 'AU' || b === 'RB 105'
 
 	// Sort 'AU' or 'RB 105' before others
 	if (isAFirst && !isBFirst) {
-		return -1;
+		return -1
 	} else if (!isAFirst && isBFirst) {
-		return 1;
+		return 1
 	}
 
 	// Sort other elements based on XXX in `TR XXX`
-	const aText = a.replace('TR ', '');
-	const bText = b.replace('TR ', '');
+	const aText = a.replace('TR ', '')
+	const bText = b.replace('TR ', '')
 
 	let aNum
 	let bNum
@@ -81,31 +122,40 @@ function customSort(a, b) {
 		aNum = Number(aText)
 	}
 
-
 	if (bText.includes('-')) {
 		bNum = Number(`${bText.split('-')[0]}.${bText.split('-')[1]}`)
 	} else {
 		bNum = Number(bText)
 	}
 
-	return aNum - bNum;
+	return aNum - bNum
 }
 
 function Table({ sessions, attendance, updateAttendance }) {
-	const rooms = Array.from(new Set(sessions.map(i => i.room))).sort(customSort)
+	const rooms = Array.from(new Set(sessions.map(i => i.room))).sort(
+		customSort
+	)
 
-	const [day, setDay] = useLocalStorageReducer('day', (oldDay, newDay) => {
-		if (newDay == 29 || newDay == 30) {
-			return newDay
-		}
-		return oldDay
-	}, 29)
-	const [room, setRoom] = useLocalStorageReducer('room', (oldRoom, newRoom) => {
-		if (rooms.includes(newRoom)) {
-			return newRoom
-		}
-		return oldRoom
-	}, 'AU')
+	const [day, setDay] = useLocalStorageReducer(
+		'day',
+		(oldDay, newDay) => {
+			if (newDay == 29 || newDay == 30) {
+				return newDay
+			}
+			return oldDay
+		},
+		29
+	)
+	const [room, setRoom] = useLocalStorageReducer(
+		'room',
+		(oldRoom, newRoom) => {
+			if (rooms.includes(newRoom)) {
+				return newRoom
+			}
+			return oldRoom
+		},
+		'AU'
+	)
 
 	const [diff, setDiff] = useState([])
 	const debuuncedDiff = useDebounce(diff, 300)
@@ -115,22 +165,20 @@ function Table({ sessions, attendance, updateAttendance }) {
 		fetch('/api/attendance', {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
 			},
-			body: JSON.stringify(debuuncedDiff)
+			body: JSON.stringify(debuuncedDiff),
 		})
 			.then(res => res.json())
 			.then(console.log)
 			.catch(console.error)
 			.finally(() => setDiff([]))
 		// .then(setAttendance)
-
 	}, [debuuncedDiff])
 
-	const appendDiff = (update) => {
-		setDiff(diff => diff
-			.concat(update)
-			.reduce((arr, item) => {
+	const appendDiff = update => {
+		setDiff(diff =>
+			diff.concat(update).reduce((arr, item) => {
 				const pre = arr.findIndex(i => i.id == item.id)
 				if (pre >= 0) {
 					arr[pre] = item

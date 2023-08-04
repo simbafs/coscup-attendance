@@ -2,6 +2,7 @@ const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
 const { Server } = require('socket.io');
+const { setIO } = require('./src/libs/websocket')
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = 'localhost'
@@ -30,14 +31,10 @@ app.prepare().then(() => {
             res.statusCode = 500
             res.end('internal server error')
         }
+    }).once('error', (err) => {
+        console.error(err)
+        process.exit(1)
     })
-    // .once('error', (err) => {
-    //     console.error(err)
-    //     process.exit(1)
-    // })
-    // .listen(port, () => {
-    //     console.log(`> Ready on http://${hostname}:${port}`)
-    // })
 
     const io = new Server(server, {
         path: '/socket.io', // or any other path you need
@@ -46,26 +43,7 @@ app.prepare().then(() => {
         }
     });
 
-    io.on('connection', socket => {
-        // your sockets here
-        console.log('Client connected:', socket.id);
-
-        socket.on('message', (data) => {
-            console.log('Received message:', data);
-            // You can emit messages back to the clients here if needed
-        });
-
-        socket.on('echo', (data) => {
-            console.log('Received echo:', data);
-            socket.emit('echo', JSON.stringify({
-                echo: data
-            }));
-        })
-
-        socket.on('disconnect', () => {
-            console.log('Client disconnected:', socket.id);
-        });
-    });
+    setIO(io)
 
     server.listen(port, err => {
         if (err) throw err;
