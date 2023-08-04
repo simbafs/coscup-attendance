@@ -32,19 +32,10 @@ const OpenedDB = new Set()
  * @param {object} diff - diff object
  */
 
-
-/**
- * @typedef {object} db
- * @property {function} appendDiff - append a diff to db
- * @property {function} getJSON - get the json object of db
- * @property {function} reloadDB - reload db from file
- * @property {function} saveDB - save db to file
- */
-
 /**
  * create a db object
  * @param {string} file - filename
- * @param {whenUpdate} whenUpdate - callback when db is updated
+ * @param {function} whenUpdate - callback when db is updated
  * @returns {Promise<db>} - db object
  */
 export default async function NewDB(file, whenUpdate) {
@@ -53,34 +44,31 @@ export default async function NewDB(file, whenUpdate) {
         return OpenedDB.get(file)
     }
     const dbObj = {
-        appendDiff(diff) {
-            // console.log('appendDiff', diff)
-            if (['day', 'room', 'id', 'attendance'].some(i => !diff[i])) {
-                return Error('invalid diff')
+        async appendDiff(diffs) {
+            for (let diff of diffs) {
+                // console.log('appendDiff', diff)
+                if (['day', 'room', 'id', 'attendance'].some(i => !diff[i])) {
+                    throw Error('invalid diff')
+                }
+                db.diffs.push(diff)
+                db.attendance[diff.day][diff.room][diff.id] = Number(diff.attendance)
             }
-            db.diffs.push(diff)
-            db.attendance[diff.day][diff.room][diff.id] = diff.attendance
 
-            saveData(file, db).then(() => {
-                whenUpdate?.(diff)
-            }).catch(e => {
-                console.error(e)
+            return saveData(file, db).then(() => {
+                whenUpdate?.(diffs)
             })
-
-            return undefined
         },
 
         getJSON() {
             return db
         },
-
-        async reloadDB() {
-            db = await loadData(file)
-        },
-
-        async saveDB() {
-            await saveData(file, db)
-        },
+        // async reloadDB() {
+        //     db = await loadData(file)
+        // },
+        //
+        // async saveDB() {
+        //     await saveData(file, db)
+        // },
     }
     OpenedDB.add(file, dbObj)
     return dbObj

@@ -5,15 +5,27 @@ import useSWR from 'swr'
 import useLocalStorageReducer from '@/libs/useLocalStorageReducer'
 
 export default function Home() {
-	const fetcher = url => fetch(url).then(res => res.json())
-	const { data, error } = useSWR(
-		'https://coscup.org/2023/json/session.json',
-		fetcher
-	)
-	const { data: attendanceInit, error: error2 } = useSWR(
-		'/api/attendance',
-		fetcher
-	)
+	const { data, error } = useSWR("https://coscup.org/2023/json/session.json", url => fetch(url).then(res => res.json()))
+	const [attendance, updateAttendance] = useReducer((state, action) => {
+		if (action.overwrite) {
+			return action.data
+		}
+		if (!state) return state
+
+		const r = { ...state, }
+		r[action.day][action.room][action.id] = Number(action.attendance)
+		return r
+	}, undefined)
+
+
+	// init attendance
+	useEffect(() => {
+		console.log('fetching attendance')
+		fetch('/api/attendance')
+			.then(res => res.json())
+			.then(data => updateAttendance({ data, overwrite: true }))
+			.then(() => console.log('attendance loaded'))
+	}, [])
 
 	return (
 		<>
@@ -29,13 +41,13 @@ export default function Home() {
 				<h1 className="text-center text-2xl font-semibold">
 					製播組議程人數統計
 				</h1>
-				{error || error2 ? (
+				{error ? (
 					<div>
 						<h1>Fail to laod data:</h1>
-						<pre>{JSON.stringify({ error, error2 }, null, 2)}</pre>
+						<pre>{JSON.stringify(error, null, 2)}</pre>
 					</div>
-				) : data && attendanceInit ? (
-					<Table data={data} attendanceInit={attendanceInit} />
+				) : data && attendance ? (
+					<Table sessions={data.sessions} attendance={attendance} updateAttendance={updateAttendance} />
 				) : (
 					<div className="text-center my-4">Loading...</div>
 				)}
@@ -43,6 +55,7 @@ export default function Home() {
 		</>
 	)
 }
+
 function customSort(a, b) {
 	// Check if 'AU' or 'RB 105' are present in the array
 	const isAFirst = a === "AU" || a === "RB 105";
@@ -77,8 +90,9 @@ function customSort(a, b) {
 
 	return aNum - bNum;
 }
-function Table({ data, attendanceInit }) {
-	const rooms = Array.from(new Set(data.sessions.map(i => i.room))).sort(customSort)
+
+function Table({ sessions, attendance, updateAttendance }) {
+	const rooms = Array.from(new Set(sessions.map(i => i.room))).sort(customSort)
 
 	const [day, setDay] = useLocalStorageReducer('day', (oldDay, newDay) => {
 		if (newDay == 29 || newDay == 30) {
@@ -94,43 +108,43 @@ function Table({ data, attendanceInit }) {
 	}, 'AU')
 
 	const [diff, setDiff] = useState([])
-
-	// update = {day: 29, room: 'AU', id: 'V8F9VH', attendance: 10}
-	const [attendance, updateAttendance] = useReducer((curr, update) => {
-		let r = {
-			29: curr[29],
-			30: curr[30],
-		}
-		r[update.day][update.room][update.id] = update.attendance
-
-		setDiff(diff => diff.concat(update))
-
-		return r
-	}, attendanceInit)
-	const debonseedAttendance = useDebounce(attendance, 1000)
+	const debuuncedDiff = useDebounce(diff, 300)
 
 	useEffect(() => {
-		let filterdDiff = diff.reduce((arr, item) => {
-			const pre = arr.findIndex(i => i.id == item.id)
-			if (pre >= 0) {
-				arr[pre] = item
-			} else {
-				arr = arr.concat(item)
-			}
-
-			return arr
-		}, [])
-
+		if (debuuncedDiff.length == 0) return
 		fetch('/api/attendance', {
 			method: 'POST',
-			body: JSON.stringify(filterdDiff),
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(debuuncedDiff)
 		})
 			.then(res => res.json())
 			.then(console.log)
+			.catch(console.error)
+			.finally(() => setDiff([]))
+		// .then(setAttendance)
 
-		setDiff([])
-	}, [debonseedAttendance])
+	}, [debuuncedDiff])
 
+	const appendDiff = (update) => {
+		setDiff(diff => diff
+			.concat(update)
+			.reduce((arr, item) => {
+				const pre = arr.findIndex(i => i.id == item.id)
+				if (pre >= 0) {
+					arr[pre] = item
+				} else {
+					arr = arr.concat(item)
+				}
+
+				return arr
+			}, [])
+		)
+		updateAttendance(update)
+	}
+
+	// init day and room
 	useEffect(() => {
 		if (!localStorage) return
 
@@ -145,12 +159,12 @@ function Table({ data, attendanceInit }) {
 		}
 	}, [])
 
-	let sessions = groupBy(
-		data.sessions.filter(item => new Date(item.start).getDate() == day),
+	let groupedSessions = groupBy(
+		sessions.filter(item => new Date(item.start).getDate() == day),
 		'room'
 	)[room]
 	// sort by start time
-	sessions.sort((a, b) => {
+	groupedSessions.sort((a, b) => {
 		let timeA = new Date(a.start)
 		let timeB = new Date(b.start)
 		return timeA - timeB
@@ -184,13 +198,13 @@ function Table({ data, attendanceInit }) {
 			<hr className="my-4" />
 
 			<div className="grid grid-cols-[110px_100px_4fr] lg:gap-2 gap-4">
-				{sessions.map(s => (
+				{groupedSessions.map(s => (
 					<Session
 						key={s.id}
 						session={s}
 						attendance={attendance[day][s.room][s.id]}
 						setAttendance={n =>
-							updateAttendance({
+							appendDiff({
 								day: day,
 								room: s.room,
 								id: s.id,
