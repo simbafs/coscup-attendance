@@ -88,6 +88,7 @@ export default function Home() {
 						sessions={data.sessions}
 						attendance={attendance}
 						updateAttendance={updateAttendance}
+						connected={!!socket}
 					/>
 				) : (
 					<div className="text-center my-4">Loading...</div>
@@ -131,7 +132,7 @@ function customSort(a, b) {
 	return aNum - bNum
 }
 
-function Table({ sessions, attendance, updateAttendance }) {
+function Table({ sessions, attendance, updateAttendance, connected }) {
 	const rooms = Array.from(new Set(sessions.map(i => i.room))).sort(
 		customSort
 	)
@@ -259,6 +260,7 @@ function Table({ sessions, attendance, updateAttendance }) {
 								attendance: n,
 							})
 						}
+						connected={connected}
 					/>
 				))}
 			</div>
@@ -285,7 +287,7 @@ function getFormatedDate(dateStr) {
 	return `${to2(time.getHours())}:${to2(time.getMinutes())}`
 }
 
-function Session({ session, attendance, setAttendance }) {
+function Session({ session, attendance, setAttendance, connected }) {
 	return (
 		<>
 			<div className="my-auto">
@@ -300,6 +302,7 @@ function Session({ session, attendance, setAttendance }) {
 				min={0}
 				onChange={e => setAttendance(e.target.value)}
 				className="box"
+				disabled={!connected}
 			/>
 			<div className="my-auto">
 				<span className="text-right break-words">
