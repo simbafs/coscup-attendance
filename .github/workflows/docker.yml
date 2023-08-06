@@ -1,0 +1,30 @@
+name: Deploy Images to GHCR
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+      push-store-image:
+        runs-on: ubuntu-latest
+        steps:
+          - name: 'Checkout GitHub Action'
+            uses: actions/checkout@main
+
+          - name: 'Login to GitHub Container Registry'
+            uses: docker/login-action@v1
+            with:
+              registry: ghcr.io
+              username: ${{ github.actor }}
+              password: ${{ secrets.GITHUB_TOKEN }}
+              
+          - name: Set env
+            run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+            
+          - name: 'Build Inventory Image'
+            run: |
+              docker build . \
+                -t ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }} \
+                -t  tag ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }}  
+              docker push ghcr.io/simbafs/coscup-attendance:latest
