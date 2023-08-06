@@ -30,3 +30,13 @@ jobs:
             run: |
               docker build . -t ghcr.io/simbafs/coscup-attendance:latest -t ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }}
               docker push ghcr.io/simbafs/coscup-attendance:latest
+
+          - name: setup ssh agent
+            uses: webfactory/ssh-agent@v0.7.0
+            with:
+              ssh-private-key: ${{ secrets.SSHKEY }}
+
+          - name: do CD
+            run: |
+              - ssh ${{ secrets.SSHHOST }} "${{ secrets.SSHCMD }}"
+              
