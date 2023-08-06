@@ -1,4 +1,8 @@
 FROM node:20-slim AS base
+
+LABEL org.opencontainers.image.source="https://github.com/simbafs/coscup-attendance"
+LABEL org.opencontainers.image.authors="Simba Fs <me@simbafs.cc>"
+
 ENV PNPM_HOME="/pnpm"
 ENV NODE_ENV=production
 ENV PATH="$PNPM_HOME:$PATH"
