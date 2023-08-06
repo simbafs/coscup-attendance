@@ -1,6 +1,5 @@
-.dockerignore 
+node_modules
 .git
-.github
 .gitignore
+*.md
 .next
-.vercel

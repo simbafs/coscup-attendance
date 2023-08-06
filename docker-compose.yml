@@ -2,7 +2,7 @@ version: '3'
 services:
   app:
     container_name: coscup-attendance
-    image: simbafs/coscup-attendance:latest
+    image: 80f43559b798
     volumes:
       - ./data/:/app/data/
     ports:
