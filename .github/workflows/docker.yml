@@ -23,9 +23,12 @@ jobs:
               
           - name: Set env
             id: vars
-            run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+            run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+
+          - name: echo 
+            run: echo ${{ steps.vars.outputs.tag }}
             
-          - name: 'Build Image'
-            run: |
-              docker build -t ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }} -t  tag ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }} .
-              docker push ghcr.io/simbafs/coscup-attendance:latest
+          # - name: 'Build Image'
+          #   run: |
+          #     docker build -t ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }} -t  tag ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }} .
+          #     docker push ghcr.io/simbafs/coscup-attendance:latest
