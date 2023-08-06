@@ -69,30 +69,40 @@ export default function Home() {
 					type="image/svg+xml"
 				/>
 			</Head>
-			<div className="container">
-				<h1 className="text-center text-2xl font-semibold">
-					製播組議程人數統計
-					{socket ? (
-						<p className="text-green-500" key="connect">Connected id: {socket.id}</p>
+			<div className="w-screen min-h-screen flex flex-col items-center">
+				<div className="max-w-[800px] mt-16">
+					<h1 className="text-center text-2xl font-semibold">
+						製播組議程人數統計
+						{socket ? (
+							<p className="text-green-500" key="connect">Connected id: {socket.id}</p>
+						) : (
+							<p className="text-red-500" key="disconnect">Disconnected</p>
+						)}
+					</h1>
+					{error ? (
+						<div>
+							<h1>Fail to laod data:</h1>
+							<pre>{JSON.stringify(error, null, 2)}</pre>
+						</div>
+					) : data && attendance ? (
+						<Table
+							sessions={data.sessions}
+							attendance={attendance}
+							updateAttendance={updateAttendance}
+							connected={!!socket}
+						/>
 					) : (
-						<p className="text-red-500" key="disconnect">Disconnected</p>
+						<div className="text-center my-4">Loading...</div>
 					)}
-				</h1>
-				{error ? (
-					<div>
-						<h1>Fail to laod data:</h1>
-						<pre>{JSON.stringify(error, null, 2)}</pre>
-					</div>
-				) : data && attendance ? (
-					<Table
-						sessions={data.sessions}
-						attendance={attendance}
-						updateAttendance={updateAttendance}
-						connected={!!socket}
-					/>
-				) : (
-					<div className="text-center my-4">Loading...</div>
-				)}
+				</div>
+				<div className="grow" />
+				<footer className="flex justify-center pb-8 pt-4 w-full bg-gray-100">
+					<p>Repo at <a
+						href="https://github.com/simbafs/coscup-attendance"
+						className='text-blue-500 underline hover:underline-offset-0'
+						target="_blank"
+					>simbafs/coscup-attendance</a></p>
+				</footer>
 			</div>
 		</>
 	)
