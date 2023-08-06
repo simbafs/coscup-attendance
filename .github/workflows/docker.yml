@@ -38,5 +38,5 @@ jobs:
 
           - name: do CD
             run: |
-              - ssh ${{ secrets.SSHHOST }} "${{ secrets.SSHCMD }}"
+              - ssh ${{ vars.SSHHOST }} "${{ vars.SSHCMD }}"
               
