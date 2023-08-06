@@ -26,7 +26,7 @@ jobs:
           - name: echo 
             run: echo ${{ steps.vars.outputs.tag }}
             
-          # - name: 'Build Image'
-          #   run: |
-          #     docker build -t ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }} -t  tag ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }} .
-          #     docker push ghcr.io/simbafs/coscup-attendance:latest
+          - name: 'Build Image'
+            run: |
+              docker build -t ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }} -t  tag ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }} .
+              docker push ghcr.io/simbafs/coscup-attendance:latest
