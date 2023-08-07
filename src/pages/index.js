@@ -107,6 +107,7 @@ export default function Home() {
 						className='text-blue-500 underline hover:underline-offset-0'
 						target="_blank"
 					>SimbaFs</a> with 🐈</p>
+					<p>hi</p>
 				</footer>
 			</div>
 		</>
