@@ -29,7 +29,7 @@ jobs:
           - name: 'Build Image'
             run: |
               docker build . -t ghcr.io/simbafs/coscup-attendance:latest -t ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }}
-              docker push --all-tags ghcr.io/simbafs/coscup-attendance:latest
+              docker push --all-tags ghcr.io/simbafs/coscup-attendance:${{ steps.vars.outputs.tag }}
 
       cd:
         runs-on: ubuntu-latest
