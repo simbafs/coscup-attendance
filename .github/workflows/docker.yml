@@ -42,4 +42,4 @@ jobs:
         steps:
           - name: trigger webhook
             run: |
-              curl -XPOST --header 'Content-Type: application/json'  -d'{"key": "${{ secrets.WEBHOOK_KEY }} "}' "https://webhook.simbafs.cc/hooks/coscup-attendance"
+              curl -XPOST --header 'Content-Type: application/json'  -d'{"key": "${{ secrets.WEBHOOK_KEY }}"}' "https://webhook.simbafs.cc/hooks/coscup-attendance"
