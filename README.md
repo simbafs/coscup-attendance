@@ -12,8 +12,7 @@
 
 # Docker
 
-https://hub.docker.com/r/simbafs/coscup-attendance
-
+https://github.com/simbafs/coscup-attendance/pkgs/container/coscup-attendance
 
 # Release Note:
 ## v0.1.0
@@ -22,3 +21,6 @@ https://hub.docker.com/r/simbafs/coscup-attendance
 ## v0.1.1
 加入 stage build，縮小 docker image 體積
 345MB -> 175MB
+
+## v0.1.15
+搞定 CI/CD
