@@ -24,3 +24,6 @@ https://github.com/simbafs/coscup-attendance/pkgs/container/coscup-attendance
 
 ## v0.1.15
 搞定 CI/CD
+
+## v0.2.0
+新增驗證，需要 token 才能進入，以後可能會有 RBAC（？
