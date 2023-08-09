@@ -14,7 +14,11 @@ Use golang as backend, nextjs SSG for frontend, both in a monorepo. Build all fi
 
 # Usage
 ```
-$ make backend # start backend server
+$ make backend # start backend dev server(hotreload with nodemon, you need install in global)
 $ make frontend # start frontend dev server
 $ make build # build frontend, embed into backend server and build into a single executable file
 ```
+
+# TODO
+* add Action to build automatically
+* docker image ?
