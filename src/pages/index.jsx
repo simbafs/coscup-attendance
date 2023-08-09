@@ -5,10 +5,71 @@ import useSWR from 'swr'
 import useLocalStorageReducer from '@/libs/useLocalStorageReducer'
 import { io } from 'socket.io-client'
 import shouldParse from '@/libs/shouldParse'
+import Footer from '@/components/footer'
+import { useRouter } from 'next/router'
+import box from '@/variants/box'
 
 export default function Home() {
+	const router = useRouter()
+	const [token, setToken] = useState(router.query.token || '')
+	const [valid, setValid] = useState(false)
+
+	useEffect(() => {
+		fetch(`/api/verify?token=${token}`)
+			.then(res => res.json())
+			.then(data => {
+				if (data.status === 'ok') {
+					setValid(true)
+					router.push(`/?token=${token}`)
+				}
+			})
+	}, [token])
+
+	useEffect(() => {
+		if (router.query.token) setToken(router.query.token)
+	}, [router.query.token])
+
+	return (
+		<>
+			<Head>
+				<title>製播組統計議程人數統計</title>
+				<link
+					href="https://coscup.org/2023/favicon.svg"
+					rel="icon"
+					type="image/svg+xml"
+				/>
+			</Head>
+			<div className="w-screen min-h-screen flex flex-col">
+				<div className="w-full grow flex flex-col justify-center items-center">
+					<h1 className="text-center text-2xl font-semibold">
+						製播組議程人數統計
+					</h1>
+					{valid ? (
+						<WithToken token={token} />
+					) : (
+						<form onSubmit={e => {
+							e.preventDefault()
+						}}>
+							<h1 className="text-center text-xl">請輸入 Token</h1>
+							<input
+								type="text"
+								className={box({ borderColor: valid ? 'success' : 'error' })}
+								value={token}
+								onChange={e => setToken(e.target.value)}
+							/>
+						</form>
+					)}
+				</div>
+				<Footer />
+			</div>
+		</>
+	)
+
+}
+
+function WithToken({ token }) {
 	const { data, error } = useSWR(
-		'https://coscup.org/2023/json/session.json',
+		`https://coscup.org/2023/json/session.json?token=${token}`,
 		url => fetch(url).then(res => res.json())
 	)
 	const [socket, setSocket] = useState(undefined)
@@ -26,14 +87,16 @@ export default function Home() {
 	// init attendance
 	useEffect(() => {
 		console.log('fetching attendance')
-		fetch('/api/attendance')
+		fetch(`/api/attendance?token=${token}`)
 			.then(res => res.json())
 			.then(data => updateAttendance({ data, overwrite: true }))
 			.then(() => console.log('attendance loaded'))
 	}, [])
 
 	useEffect(() => {
-		const socket = io()
+		const socket = io({
+			auth: { token },
+		})
 
 		// log socket connection
 		socket.on('connect', () => {
@@ -59,58 +122,30 @@ export default function Home() {
 		}
 	}, [])
 
-	return (
-		<>
-			<Head>
-				<title>製播組統計議程人數統計</title>
-				<link
-					href="https://coscup.org/2023/favicon.svg"
-					rel="icon"
-					type="image/svg+xml"
-				/>
-			</Head>
-			<div className="w-screen min-h-screen flex flex-col items-center">
-				<div className="max-w-[800px] mt-16">
-					<h1 className="text-center text-2xl font-semibold">
-						製播組議程人數統計
-						{socket ? (
-							<p className="text-green-500" key="connect">Connected id: {socket.id}</p>
-						) : (
-							<p className="text-red-500" key="disconnect">Disconnected</p>
-						)}
-					</h1>
-					{error ? (
-						<div>
-							<h1>Fail to laod data:</h1>
-							<pre>{JSON.stringify(error, null, 2)}</pre>
-						</div>
-					) : data && attendance ? (
-						<Table
-							sessions={data.sessions}
-							attendance={attendance}
-							updateAttendance={updateAttendance}
-							connected={!!socket}
-						/>
-					) : (
-						<div className="text-center my-4">Loading...</div>
-					)}
-				</div>
-				<div className="grow" />
-				<footer className="flex justify-center items-center flex-col pb-8 pt-4 w-full bg-gray-100">
-					<p>Repo at <a
-						href="https://github.com/simbafs/coscup-attendance"
-						className='text-blue-500 underline hover:underline-offset-0'
-						target="_blank"
-					>simbafs/coscup-attendance</a></p>
-					<p>Made by <a
-						href="https://github.com/simbafs"
-						className='text-blue-500 underline hover:underline-offset-0'
-						target="_blank"
-					>SimbaFs</a> with 🐈</p>
-				</footer>
+	useEffect(() => console.log({ token }), [token])
+
+	return <>
+		{socket ? (
+			<p className="text-green-500" key="connect">Connected id: {socket.id}</p>
+		) : (
+			<p className="text-red-500" key="disconnect">Disconnected</p>
+		)}
+		{error ? (
+			<div>
+				<h1>Fail to laod data:</h1>
+				<pre>{JSON.stringify(error, null, 2)}</pre>
 			</div>
-		</>
-	)
+		) : data && attendance ? (
+			<Table
+				sessions={data.sessions}
+				attendance={attendance}
+				updateAttendance={updateAttendance}
+				connected={!!socket}
+			/>
+		) : (
+			<div className="text-center my-4">Loading...</div>
+		)}
+	</>
 }
 
 function customSort(a, b) {
@@ -240,7 +275,7 @@ function Table({ sessions, attendance, updateAttendance, connected }) {
 				<select
 					value={day}
 					onChange={e => setDay(e.target.value)}
-					className="box"
+					className={box()}
 				>
 					<option value={29}>7/29</option>
 					<option value={30}>7/30</option>
@@ -249,7 +284,7 @@ function Table({ sessions, attendance, updateAttendance, connected }) {
 				<select
 					value={room}
 					onChange={e => setRoom(e.target.value)}
-					className="box"
+					className={box()}
 				>
 					{rooms.map(room => (
 						<option key={room} value={room}>
@@ -316,7 +351,7 @@ function Session({ session, attendance, setAttendance, connected }) {
 				value={attendance}
 				min={0}
 				onChange={e => setAttendance(e.target.value)}
-				className="box"
+				className={box()}
 				disabled={!connected}
 			/>
 			<div className="my-auto">
