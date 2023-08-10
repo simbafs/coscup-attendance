@@ -5,7 +5,6 @@ import (
 	"backend/internal/fileserver"
 	"backend/internal/staticfs"
 	"embed"
-	_ "embed"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -47,6 +46,7 @@ func main() {
 		return
 	}
 
+	fmt.Printf("Server is running at %s\n", *addr)
 	if err := run(*addr); err != nil {
 		fmt.Printf("Oops, there's an error: %v\n", err)
 	}
