@@ -1,55 +1,53 @@
 package main
 
 import (
+	"backend/api"
+	"backend/internal/fileserver"
+	"backend/internal/staticfs"
 	"embed"
 	_ "embed"
 	"fmt"
-	"io/fs"
-	"net/http"
-	"path"
 
 	"github.com/gin-gonic/gin"
+	flag "github.com/spf13/pflag"
 )
-
-// https://github.com/golang/go/issues/43431#issuecomment-752662261
-// myFS implements fs.FS
-type myFS struct {
-	fs   embed.FS
-	root string
-}
-
-func (c myFS) Open(name string) (fs.File, error) {
-	return c.fs.Open(path.Join(c.root, name))
-}
 
 // go embed ignore files begin with '_' or '.', 'all:' tells go embed to embed all files
 
 //go:embed all:static/*
 var rawStatic embed.FS
 
-var static = myFS{
-	fs:   rawStatic,
-	root: "static",
-}
+var static = staticfs.NewStatic(rawStatic, "static")
 
-func run() error {
+var (
+	Mode       = "debug"
+	Version    = "dev"
+	CommitHash = "n/a"
+	BuildTime  = "n/a"
+)
+
+func run(addr string) error {
+	gin.SetMode(Mode)
 	r := gin.Default()
 
-	// https://stackoverflow.com/questions/36357791/
-	r.NoRoute(gin.WrapH(http.FileServer(http.FS(static))))
+	api.Route(r)
+	fileserver.Route(r, static, Mode)
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
-	// r.StaticFS("/", http.FS(static))
-	return r.Run("0.0.0.0:3001")
+	return r.Run(addr)
 }
 
 func main() {
-	if err := run(); err != nil {
+	addr := flag.StringP("addr", "a", ":3000", "server address")
+	version := flag.BoolP("version", "v", false, "show version")
+	flag.StringVarP(&Mode, "mode", "m", Mode, "server mode")
+	flag.Parse()
+
+	if *version {
+		fmt.Printf("Version: %s\nCommitHash: %s\nBuildTime: %s\n", Version, CommitHash, BuildTime)
+		return
+	}
+
+	if err := run(*addr); err != nil {
 		fmt.Printf("Oops, there's an error: %v\n", err)
 	}
 }
