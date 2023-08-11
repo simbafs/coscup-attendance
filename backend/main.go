@@ -2,13 +2,14 @@ package main
 
 import (
 	"backend/api"
+	"backend/internal/data"
 	"backend/internal/fileserver"
 	"backend/internal/staticfs"
 	"embed"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	flag "github.com/spf13/pflag"
+	"github.com/spf13/pflag"
 )
 
 // go embed ignore files begin with '_' or '.', 'all:' tells go embed to embed all files
@@ -35,11 +36,24 @@ func run(addr string) error {
 	return r.Run(addr)
 }
 
+func init() {
+	err := data.OpenDB()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Database connected: %v\n", data.DB)
+
+	err = data.InitDB("https://coscup.org/2023/json/session.json")
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
-	addr := flag.StringP("addr", "a", ":3000", "server address")
-	version := flag.BoolP("version", "v", false, "show version")
-	flag.StringVarP(&Mode, "mode", "m", Mode, "server mode")
-	flag.Parse()
+	addr := pflag.StringP("addr", "a", ":3000", "server address")
+	version := pflag.BoolP("version", "v", false, "show version")
+	pflag.StringVarP(&Mode, "mode", "m", Mode, "server mode")
+	pflag.Parse()
 
 	if *version {
 		fmt.Printf("Version: %s\nCommitHash: %s\nBuildTime: %s\n", Version, CommitHash, BuildTime)
