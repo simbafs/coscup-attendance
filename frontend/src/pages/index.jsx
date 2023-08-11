@@ -80,7 +80,7 @@ function WithToken({ token }) {
 		if (!state) return state
 
 		const r = { ...state }
-		r[action.day][action.room][action.id] = Number(action.attendance)
+		r[action.id] = Number(action.attendance)
 		return r
 	}, undefined)
 
@@ -89,7 +89,10 @@ function WithToken({ token }) {
 		console.log('fetching attendance')
 		fetch(`/api/attendance?token=${token}`)
 			.then(res => res.json())
-			.then(data => updateAttendance({ data, overwrite: true }))
+			.then(data => updateAttendance({
+				data: data.attendance,
+				overwrite: true
+			}))
 			.then(() => console.log('attendance loaded'))
 	}, [])
 
@@ -137,7 +140,7 @@ function WithToken({ token }) {
 			</div>
 		) : data && attendance ? (
 			<Table
-				sessions={data.sessions}
+				data={data}
 				attendance={attendance}
 				updateAttendance={updateAttendance}
 				connected={!!socket}
@@ -148,44 +151,8 @@ function WithToken({ token }) {
 	</>
 }
 
-function customSort(a, b) {
-	// Check if 'AU' or 'RB 105' are present in the array
-	const isAFirst = a === 'AU' || a === 'RB 105'
-	const isBFirst = b === 'AU' || b === 'RB 105'
-
-	// Sort 'AU' or 'RB 105' before others
-	if (isAFirst && !isBFirst) {
-		return -1
-	} else if (!isAFirst && isBFirst) {
-		return 1
-	}
-
-	// Sort other elements based on XXX in `TR XXX`
-	const aText = a.replace('TR ', '')
-	const bText = b.replace('TR ', '')
-
-	let aNum
-	let bNum
-
-	if (aText.includes('-')) {
-		aNum = Number(`${aText.split('-')[0]}.${aText.split('-')[1]}`)
-	} else {
-		aNum = Number(aText)
-	}
-
-	if (bText.includes('-')) {
-		bNum = Number(`${bText.split('-')[0]}.${bText.split('-')[1]}`)
-	} else {
-		bNum = Number(bText)
-	}
-
-	return aNum - bNum
-}
-
-function Table({ sessions, attendance, updateAttendance, connected }) {
-	const rooms = Array.from(new Set(sessions.map(i => i.room))).sort(
-		customSort
-	)
+function Table({ data, attendance, updateAttendance, connected }) {
+	const rooms = data.rooms.map(r => r.id)
 
 	const [day, setDay] = useLocalStorageReducer(
 		'day',
@@ -259,7 +226,7 @@ function Table({ sessions, attendance, updateAttendance, connected }) {
 	}, [])
 
 	let groupedSessions = groupBy(
-		sessions.filter(item => new Date(item.start).getDate() == day),
+		data.sessions.filter(item => new Date(item.start).getDate() == day),
 		'room'
 	)[room]
 	// sort by start time
@@ -301,11 +268,9 @@ function Table({ sessions, attendance, updateAttendance, connected }) {
 					<Session
 						key={s.id}
 						session={s}
-						attendance={attendance[day][s.room][s.id]}
+						attendance={attendance[s.id]}
 						setAttendance={n =>
 							appendDiff({
-								day: day,
-								room: s.room,
 								id: s.id,
 								attendance: n,
 							})

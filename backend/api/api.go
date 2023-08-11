@@ -31,4 +31,10 @@ func Route(r *gin.Engine) {
 			"attendance": attendance,
 		})
 	})
+
+	api.GET("/verify", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "ok",
+		})
+	})
 }
