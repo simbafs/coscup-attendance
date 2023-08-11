@@ -87,14 +87,10 @@ func InitDB(url string) error {
 	_, err := DB.Exec(`
 	    CREATE TABLE IF NOT EXISTS attendance(
             id         VARCHAR(8) NOT NULL PRIMARY KEY
-            ,day        INTEGER  NOT NULL 
-            ,room       VARCHAR(3) NOT NULL
             ,attendance INTEGER  NOT NULL
         );
         CREATE TABLE IF NOT EXISTS updates(
-           time       INTEGER  NOT NULL PRIMARY KEY 
-          ,day        INTEGER  NOT NULL
-          ,room       VARCHAR(3) NOT NULL
+           time       DATETIME NOT NULL PRIMARY KEY 
           ,id         VARCHAR(6) NOT NULL
           ,attendance INTEGER  NOT NULL
         );
@@ -108,7 +104,7 @@ func InitDB(url string) error {
 		return err
 	}
 
-	stmt, err := DB.Prepare(`INSERT OR IGNORE INTO attendance values(?,?,?,?)`)
+	stmt, err := DB.Prepare(`INSERT OR IGNORE INTO attendance (id, attendance) VALUES (?, ?);`)
 	if err != nil {
 		return err
 	}
@@ -116,7 +112,7 @@ func InitDB(url string) error {
 
 	for _, session := range data.Sessions {
 		fmt.Printf("%s\n", session.ID)
-		_, err := stmt.Exec(session.Start.Day(), session.Room, session.ID, 0)
+		_, err := stmt.Exec(session.ID, 0)
 		if err != nil {
 			return err
 		}
