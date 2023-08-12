@@ -48,9 +48,6 @@ func run(addr string) error {
 	return r.Run(addr)
 }
 
-func init() {
-}
-
 func main() {
 	addr := pflag.StringP("addr", "a", ":3000", "server address")
 	version := pflag.BoolP("version", "v", false, "show version")

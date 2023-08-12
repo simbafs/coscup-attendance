@@ -3,7 +3,7 @@ import { useReducer, useState, useEffect } from 'react'
 import { useDebounce } from 'usehooks-ts'
 import useSWR from 'swr'
 import useLocalStorageReducer from '@/libs/useLocalStorageReducer'
-import { io } from 'socket.io-client'
+import io from 'socket.io-client'
 import shouldParse from '@/libs/shouldParse'
 import Footer from '@/components/footer'
 import { useRouter } from 'next/router'
@@ -329,7 +329,7 @@ function Session({ session, attendance, setAttendance, connected }) {
 				type="number"
 				value={attendance}
 				min={0}
-				onChange={e => setAttendance(e.target.value)}
+				onChange={e => setAttendance(Number(e.target.value))}
 				className={box()}
 				disabled={!connected}
 			/>

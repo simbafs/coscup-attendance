@@ -6,8 +6,8 @@ import (
 )
 
 type UpdateData struct {
-	ID         string
-	Attendance int
+	ID         string `json:"id" binding:"required"`
+	Attendance int    `json:"attendance" binding:"required"`
 }
 
 func Update(data []UpdateData) error {
@@ -23,7 +23,7 @@ func Update(data []UpdateData) error {
 		}
 	}
 
-	stmt, err = DB.Prepare(`INSERT OR IGNORE INTO updates (time, id, attendance) VALUES (?, ?);`)
+	stmt, err = DB.Prepare(`INSERT OR IGNORE INTO updates (time, id, attendance) VALUES (?, ?, ?);`)
 	if err != nil {
 		return fmt.Errorf("db.Prepare: %w", err)
 	}
