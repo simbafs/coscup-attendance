@@ -39,7 +39,7 @@ export default function Home() {
 					type="image/svg+xml"
 				/>
 			</Head>
-			<div className="w-screen min-h-screen flex flex-col">
+			<div className="w-screen min-h-screen flex flex-col dark:bg-stone-950 dark:text-stone-50">
 				<div className="w-full grow flex flex-col justify-center items-center">
 					<h1 className="text-center text-2xl font-semibold">
 						製播組議程人數統計

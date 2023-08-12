@@ -89,7 +89,7 @@ func InitDB(url string) error {
 			id         VARCHAR(8) NOT NULL PRIMARY KEY
 			,attendance INTEGER  NOT NULL
         );
-        CREATE TABLE IF NOT EXISTS update(
+        CREATE TABLE IF NOT EXISTS updates(
 			time       DATETIME NOT NULL PRIMARY KEY 
 			,id         VARCHAR(6) NOT NULL
 			,attendance INTEGER  NOT NULL

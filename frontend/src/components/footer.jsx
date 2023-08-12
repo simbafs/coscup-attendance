@@ -1,6 +1,6 @@
 export default function Footer() {
 	return (
-		<footer className="flex justify-center items-center flex-col pb-8 pt-4 w-full bg-gray-100">
+		<footer className="flex justify-center items-center flex-col pb-8 pt-4 w-full bg-gray-100 dark:bg-stone-950 dark:text-stone-50">
 			<p>
 				Repo at{' '}
 				<a

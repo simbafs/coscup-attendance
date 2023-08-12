@@ -7,6 +7,7 @@ import (
 	"backend/internal/staticfs"
 	"embed"
 	"fmt"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/pflag"
@@ -27,6 +28,17 @@ var (
 )
 
 func run(addr string) error {
+	err := db.OpenDB()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Database connected: %v\n", db.DB)
+
+	err = db.InitDB("https://coscup.org/2023/json/session.json")
+	if err != nil {
+		return err
+	}
+
 	gin.SetMode(Mode)
 	r := gin.Default()
 
@@ -37,16 +49,6 @@ func run(addr string) error {
 }
 
 func init() {
-	err := db.OpenDB()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Database connected: %v\n", db.DB)
-
-	err = db.InitDB("https://coscup.org/2023/json/session.json")
-	if err != nil {
-		panic(err)
-	}
 }
 
 func main() {
@@ -63,5 +65,6 @@ func main() {
 	fmt.Printf("Server is running at %s\n", *addr)
 	if err := run(*addr); err != nil {
 		fmt.Printf("Oops, there's an error: %v\n", err)
+		os.Exit(1)
 	}
 }
