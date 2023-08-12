@@ -1,4 +1,4 @@
-package data
+package db
 
 import (
 	"encoding/json"
@@ -86,27 +86,30 @@ func getRawData(url string) (data RawData, err error) {
 func InitDB(url string) error {
 	_, err := DB.Exec(`
 	    CREATE TABLE IF NOT EXISTS attendance(
-            id         VARCHAR(8) NOT NULL PRIMARY KEY
-            ,attendance INTEGER  NOT NULL
+			id         VARCHAR(8) NOT NULL PRIMARY KEY
+			,attendance INTEGER  NOT NULL
         );
-        CREATE TABLE IF NOT EXISTS updates(
-           time       DATETIME NOT NULL PRIMARY KEY 
-          ,id         VARCHAR(6) NOT NULL
-          ,attendance INTEGER  NOT NULL
+        CREATE TABLE IF NOT EXISTS update(
+			time       DATETIME NOT NULL PRIMARY KEY 
+			,id         VARCHAR(6) NOT NULL
+			,attendance INTEGER  NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS token(
+			token VARCHAR(64) NOT NULL PRIMARY KEY
         );
     `)
 	if err != nil {
-		return err
+		return fmt.Errorf("crreate table db.Exec: %w", err)
 	}
 
 	data, err := getRawData(url)
 	if err != nil {
-		return err
+		return fmt.Errorf("getRawData: %w", err)
 	}
 
 	stmt, err := DB.Prepare(`INSERT OR IGNORE INTO attendance (id, attendance) VALUES (?, ?);`)
 	if err != nil {
-		return err
+		return fmt.Errorf("attendance db.Prepare: %w", err)
 	}
 	defer stmt.Close()
 
@@ -116,6 +119,11 @@ func InitDB(url string) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	_, err = DB.Exec(`INSERT OR IGNORE INTO token (token) VALUES ("token");`)
+	if err != nil {
+		return fmt.Errorf("token db.Exec: %w", err)
 	}
 
 	return nil

@@ -47,13 +47,19 @@ export default function Home() {
 					{valid ? (
 						<WithToken token={token} />
 					) : (
-						<form onSubmit={e => {
-							e.preventDefault()
-						}}>
-							<h1 className="text-center text-xl">請輸入 Token</h1>
+						<form
+							onSubmit={e => {
+								e.preventDefault()
+							}}
+						>
+							<h1 className="text-center text-xl">
+								請輸入 Token
+							</h1>
 							<input
 								type="text"
-								className={box({ borderColor: valid ? 'success' : 'error' })}
+								className={box({
+									borderColor: valid ? 'success' : 'error',
+								})}
 								value={token}
 								onChange={e => setToken(e.target.value)}
 							/>
@@ -64,7 +70,6 @@ export default function Home() {
 			</div>
 		</>
 	)
-
 }
 
 function WithToken({ token }) {
@@ -89,10 +94,12 @@ function WithToken({ token }) {
 		console.log('fetching attendance')
 		fetch(`/api/attendance?token=${token}`)
 			.then(res => res.json())
-			.then(data => updateAttendance({
-				data: data.attendance,
-				overwrite: true
-			}))
+			.then(data =>
+				updateAttendance({
+					data: data.attendance,
+					overwrite: true,
+				})
+			)
 			.then(() => console.log('attendance loaded'))
 	}, [])
 
@@ -108,7 +115,7 @@ function WithToken({ token }) {
 		})
 
 		socket.on('disconnect', () => {
-			console.log("SOCKET DISCONNECTED!")
+			console.log('SOCKET DISCONNECTED!')
 			setSocket(undefined)
 		})
 
@@ -120,35 +127,42 @@ function WithToken({ token }) {
 		})
 
 		// socket disconnet onUnmount if exists
-		if (socket) return () => {
-			socket.disconnect()
-		}
+		if (socket)
+			return () => {
+				socket.disconnect()
+			}
 	}, [])
 
 	useEffect(() => console.log({ token }), [token])
 
-	return <>
-		{socket ? (
-			<p className="text-green-500" key="connect">Connected id: {socket.id}</p>
-		) : (
-			<p className="text-red-500" key="disconnect">Disconnected</p>
-		)}
-		{error ? (
-			<div>
-				<h1>Fail to laod data:</h1>
-				<pre>{JSON.stringify(error, null, 2)}</pre>
-			</div>
-		) : data && attendance ? (
-			<Table
-				data={data}
-				attendance={attendance}
-				updateAttendance={updateAttendance}
-				connected={!!socket}
-			/>
-		) : (
-			<div className="text-center my-4">Loading...</div>
-		)}
-	</>
+	return (
+		<>
+			{socket ? (
+				<p className="text-green-500" key="connect">
+					Connected id: {socket.id}
+				</p>
+			) : (
+				<p className="text-red-500" key="disconnect">
+					Disconnected
+				</p>
+			)}
+			{error ? (
+				<div>
+					<h1>Fail to laod data:</h1>
+					<pre>{JSON.stringify(error, null, 2)}</pre>
+				</div>
+			) : data && attendance ? (
+				<Table
+					data={data}
+					attendance={attendance}
+					updateAttendance={updateAttendance}
+					connected={!!socket}
+				/>
+			) : (
+				<div className="text-center my-4">Loading...</div>
+			)}
+		</>
+	)
 }
 
 function Table({ data, attendance, updateAttendance, connected }) {

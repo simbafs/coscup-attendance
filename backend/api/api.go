@@ -1,7 +1,7 @@
 package api
 
 import (
-	"backend/internal/data"
+	"backend/internal/db"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +17,7 @@ func Route(r *gin.Engine) {
 	})
 
 	api.GET("/attendance", func(c *gin.Context) {
-		attendance, err := data.GetAttendanceData()
+		attendance, err := db.GetAttendanceData()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",
@@ -33,6 +33,13 @@ func Route(r *gin.Engine) {
 	})
 
 	api.GET("/verify", func(c *gin.Context) {
+		if err := db.VerifyToken(c.Query("token")); err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"status": "ok",
 		})

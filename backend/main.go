@@ -2,7 +2,7 @@ package main
 
 import (
 	"backend/api"
-	"backend/internal/data"
+	"backend/internal/db"
 	"backend/internal/fileserver"
 	"backend/internal/staticfs"
 	"embed"
@@ -37,13 +37,13 @@ func run(addr string) error {
 }
 
 func init() {
-	err := data.OpenDB()
+	err := db.OpenDB()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Database connected: %v\n", data.DB)
+	fmt.Printf("Database connected: %v\n", db.DB)
 
-	err = data.InitDB("https://coscup.org/2023/json/session.json")
+	err = db.InitDB("https://coscup.org/2023/json/session.json")
 	if err != nil {
 		panic(err)
 	}

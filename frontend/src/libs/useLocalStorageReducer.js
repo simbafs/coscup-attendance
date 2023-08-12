@@ -1,5 +1,5 @@
-import { useReducer } from "react";
-import shouldParse from "./shouldParse";
+import { useReducer } from 'react'
+import shouldParse from './shouldParse'
 
 /**
  * useReducer but has localstorage
@@ -10,13 +10,13 @@ import shouldParse from "./shouldParse";
  * @template T
  */
 export default function useLocalStorageReducer(key, reducer, initial) {
-    const oldData = localStorage.getItem(key)
-    const data = oldData ? shouldParse(oldData, initial) : initial
-    localStorage.setItem(key, JSON.stringify(data))
-    const [value, updateValue] = useReducer((value, update) => {
-        const next = reducer(value, update)
-        localStorage.setItem(key, JSON.stringify(next))
-        return next
-    }, data)
-    return [value, updateValue]
+	const oldData = localStorage.getItem(key)
+	const data = oldData ? shouldParse(oldData, initial) : initial
+	localStorage.setItem(key, JSON.stringify(data))
+	const [value, updateValue] = useReducer((value, update) => {
+		const next = reducer(value, update)
+		localStorage.setItem(key, JSON.stringify(next))
+		return next
+	}, data)
+	return [value, updateValue]
 }

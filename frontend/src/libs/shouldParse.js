@@ -6,12 +6,12 @@
  * @return {T}
  */
 export default function shouldParse(text, fallback) {
-    let data
-    try {
-        data = JSON.parse(text)
-    } catch (e) {
-        data = fallback
-    }
+	let data
+	try {
+		data = JSON.parse(text)
+	} catch (e) {
+		data = fallback
+	}
 
-    return data
+	return data
 }
