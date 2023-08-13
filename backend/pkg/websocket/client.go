@@ -3,6 +3,7 @@ package websocket
 import (
 	"bytes"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -21,11 +22,33 @@ var (
 	space   = []byte{' '}
 )
 
+// generateID returns a random string of 16 characters
+func generateID() string {
+	const letterBytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, 16)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
 type Client struct {
-	id   string
+	ID   string
 	hub  *Hub
 	conn *gwebsocket.Conn
 	send chan []byte
+}
+
+func NewClient(hub *Hub, conn *gwebsocket.Conn) *Client {
+	client := &Client{
+		ID:   generateID(),
+		hub:  hub,
+		conn: conn,
+		send: make(chan []byte, 256),
+	}
+
+	hub.register <- client
+	return client
 }
 
 func (c *Client) readPump() {
