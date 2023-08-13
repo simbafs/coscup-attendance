@@ -2,6 +2,7 @@ package api
 
 import (
 	"backend/internal/db"
+	"backend/pkg/websocket"
 	"fmt"
 	"net/http"
 
@@ -16,14 +17,8 @@ func errorRes(c *gin.Context, err error) {
 	})
 }
 
-func Route(r *gin.Engine) {
+func Route(r *gin.Engine, io websocket.IO) {
 	api := r.Group("/api")
-	api.GET("/hello", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "ok",
-			"message": "Hello, world!",
-		})
-	})
 
 	api.GET("/attendance", func(c *gin.Context) {
 		attendance, err := db.GetAttendanceData()
@@ -64,6 +59,14 @@ func Route(r *gin.Engine) {
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"status": "ok",
+		})
+	})
+
+	api.GET("/broadcast", func(c *gin.Context) {
+		io.Broadcast([]byte("Hello, world!"))
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "ok",
+			"message": "Broadcasted!",
 		})
 	})
 }

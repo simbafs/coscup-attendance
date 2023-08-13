@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/gin-gonic/gin v1.9.1
+	github.com/gorilla/websocket v1.5.0
 	github.com/spf13/pflag v1.0.5
 	modernc.org/sqlite v1.25.0
 )
