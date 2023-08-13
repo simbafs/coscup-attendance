@@ -4,6 +4,7 @@ import (
 	"backend/api"
 	"backend/internal/fileserver"
 	"backend/internal/staticfs"
+	"backend/websocket"
 	"embed"
 	"fmt"
 
@@ -29,6 +30,7 @@ func run(addr string) error {
 	gin.SetMode(Mode)
 	r := gin.Default()
 
+	websocket.Route(r)
 	api.Route(r)
 	fileserver.Route(r, static, Mode)
 
