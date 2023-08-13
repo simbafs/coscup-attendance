@@ -22,6 +22,7 @@ var (
 )
 
 type Client struct {
+	id   string
 	hub  *Hub
 	conn *gwebsocket.Conn
 	send chan []byte
@@ -49,7 +50,7 @@ func (c *Client) readPump() {
 		}
 
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		c.hub.processor(c, message, c.hub.broadcast)
 	}
 }
 
