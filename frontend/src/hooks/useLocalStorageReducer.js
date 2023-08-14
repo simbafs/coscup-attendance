@@ -1,5 +1,5 @@
 import { useReducer } from 'react'
-import shouldParse from './shouldParse'
+import shouldParse from '../libs/shouldParse'
 
 /**
  * useReducer but has localstorage

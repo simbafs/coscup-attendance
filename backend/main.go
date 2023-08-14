@@ -43,7 +43,7 @@ func run(addr string) error {
 	gin.SetMode(Mode)
 	r := gin.Default()
 
-	io := websocket.Route(r)
+	io := websocket.Route(r, nil)
 	api.Route(r, io)
 	fileserver.Route(r, static, Mode)
 

@@ -3,6 +3,7 @@ package api
 import (
 	"backend/internal/db"
 	"backend/pkg/websocket"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -46,6 +47,14 @@ func Route(r *gin.Engine, io websocket.IO) {
 			errorRes(c, err)
 			return
 		}
+
+		dataJSON, err := json.Marshal(data)
+		if err != nil {
+			errorRes(c, err)
+			return
+		}
+
+		io.Broadcast(dataJSON)
 
 		c.JSON(http.StatusOK, gin.H{
 			"status": "ok",

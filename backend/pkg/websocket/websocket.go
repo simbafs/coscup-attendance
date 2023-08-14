@@ -37,8 +37,8 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	go client.readPump()
 }
 
-func Route(r *gin.Engine) IO {
-	hub := NewHub(nil)
+func Route(r *gin.Engine, handler HubProcessor) IO {
+	hub := NewHub(handler)
 	go hub.run()
 	r.GET("/ws", func(c *gin.Context) {
 		serveWs(hub, c.Writer, c.Request)

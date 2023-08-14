@@ -1,13 +1,18 @@
-import Head from 'next/head'
+// hooks
 import { useReducer, useState, useEffect } from 'react'
 import { useDebounce } from 'usehooks-ts'
 import useSWR from 'swr'
-import useLocalStorageReducer from '@/libs/useLocalStorageReducer'
-import io from 'socket.io-client'
-import shouldParse from '@/libs/shouldParse'
-import Footer from '@/components/footer'
+import useLocalStorageReducer from '@/hooks/useLocalStorageReducer'
+import useWS from '@/hooks/useWS'
 import { useRouter } from 'next/router'
+
+// components
+import Head from 'next/head'
+import Footer from '@/components/footer'
+
+// others
 import box from '@/variants/box'
+import shouldParse from '../libs/shouldParse'
 
 export default function Home() {
 	const router = useRouter()
@@ -73,11 +78,11 @@ export default function Home() {
 }
 
 function WithToken({ token }) {
+	const { socket, lastMessage } = useWS('ws://localhost:3000/ws')
 	const { data, error } = useSWR(
 		`https://coscup.org/2023/json/session.json?token=${token}`,
 		url => fetch(url).then(res => res.json())
 	)
-	const [socket, setSocket] = useState(undefined)
 	const [attendance, updateAttendance] = useReducer((state, action) => {
 		if (action.overwrite) {
 			return action.data
@@ -88,6 +93,10 @@ function WithToken({ token }) {
 		r[action.id] = Number(action.attendance)
 		return r
 	}, undefined)
+
+	useEffect(() => {
+		console.log({ lastMessage })
+	}, [lastMessage])
 
 	// init attendance
 	useEffect(() => {
@@ -101,42 +110,20 @@ function WithToken({ token }) {
 				})
 			)
 			.then(() => console.log('attendance loaded'))
-	}, [])
-
-	useEffect(() => {
-		const socket = io({
-			auth: { token },
-		})
-
-		// log socket connection
-		socket.on('connect', () => {
-			console.log('SOCKET CONNECTED!', socket.id)
-			setSocket(socket)
-		})
-
-		socket.on('disconnect', () => {
-			console.log('SOCKET DISCONNECTED!')
-			setSocket(undefined)
-		})
-
-		socket.on('attendance', data => {
-			const diffs = shouldParse(data, [])
-			for (let diff of diffs) {
-				updateAttendance(diff)
-			}
-		})
-
-		// socket disconnet onUnmount if exists
-		if (socket)
-			return () => {
-				socket.disconnect()
-			}
-	}, [])
+	}, [token])
 
 	useEffect(() => console.log({ token }), [token])
 
+	useEffect(() => {
+		const dataArray = shouldParse(lastMessage, [])
+		for (let data of dataArray) {
+			updateAttendance(data)
+		}
+	}, [lastMessage])
+
 	return (
 		<>
+			<pre>Connect status:, {JSON.stringify(socket)}</pre>
 			{socket ? (
 				<p className="text-green-500" key="connect">
 					Connected id: {socket.id}
@@ -237,7 +224,7 @@ function Table({ data, attendance, updateAttendance, connected }) {
 		if (room) {
 			setRoom(room)
 		}
-	}, [])
+	}, [setDay, setRoom])
 
 	let groupedSessions = groupBy(
 		data.sessions.filter(item => new Date(item.start).getDate() == day),
