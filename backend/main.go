@@ -1,0 +1,77 @@
+package main
+
+import (
+	"backend/api"
+	"backend/internal/db"
+	"backend/internal/fileserver"
+	"backend/internal/staticfs"
+	"backend/pkg/websocket"
+	"embed"
+	"fmt"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/spf13/pflag"
+)
+
+// go embed ignore files begin with '_' or '.', 'all:' tells go embed to embed all files
+
+//go:embed all:static/*
+var rawStatic embed.FS
+
+var static = staticfs.NewStatic(rawStatic, "static")
+
+var (
+	Mode       = "debug"
+	Version    = "dev"
+	CommitHash = "n/a"
+	BuildTime  = "n/a"
+)
+
+func run(addr string, dbPath string) error {
+	err := db.OpenDB(dbPath)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Database connected: %v\n", db.DB)
+
+	err = db.InitDB("https://coscup.org/2023/json/session.json")
+	if err != nil {
+		return err
+	}
+
+	gin.SetMode(Mode)
+	r := gin.Default()
+
+	io := websocket.Route(r, nil)
+	api.Route(r, io)
+	fileserver.Route(r, static, Mode)
+
+	return r.Run(addr)
+}
+
+func main() {
+	addr := pflag.StringP("addr", "a", ":3000", "server address")
+	version := pflag.BoolP("version", "v", false, "show version")
+	pflag.StringVarP(&Mode, "mode", "m", Mode, "server mode")
+	dbPath := pflag.StringP("db", "d", "./data.db", "database path")
+	help := pflag.BoolP("help", "h", false, "show help")
+
+	pflag.Parse()
+
+	if *version {
+		fmt.Printf("Version: %s\nCommitHash: %s\nBuildTime: %s\n", Version, CommitHash, BuildTime)
+		return
+	}
+
+	if *help {
+		pflag.Usage()
+		return
+	}
+
+	fmt.Printf("Server is running at %s\n", *addr)
+	if err := run(*addr, *dbPath); err != nil {
+		fmt.Printf("Oops, there's an error: %v\n", err)
+		os.Exit(1)
+	}
+}
