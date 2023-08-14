@@ -34,3 +34,7 @@ https://github.com/simbafs/coscup-attendance/pkgs/container/coscup-attendance
 ## v0.2.0
 
 新增驗證，需要 token 才能進入，以後可能會有 RBAC（？
+
+## v0.3.0
+
+用 golang 重寫後端，現在 nextjs 只負責 SSG，然後把 docker 從 285 MB 瘦身到 20MB
