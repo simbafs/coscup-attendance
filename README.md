@@ -38,3 +38,7 @@ https://github.com/simbafs/coscup-attendance/pkgs/container/coscup-attendance
 ## v0.3.0
 
 用 golang 重寫後端，現在 nextjs 只負責 SSG，然後把 docker 從 285 MB 瘦身到 20MB
+
+## v0.3.1
+
+上一版忘記 CA，所以發出 https 請求會失敗 = =
