@@ -17,7 +17,7 @@ frontend:
 build: buildFrontend buildBackend
 
 buildFrontend:
-	cd ./frontend/ && npm run build
+	cd ./frontend/ && NODE_ENV=production npm run build
 	rm -rf ./backend/static/
 	mv ./frontend/out/ ./backend/static/
 

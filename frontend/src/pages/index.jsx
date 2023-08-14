@@ -123,10 +123,9 @@ function WithToken({ token }) {
 
 	return (
 		<>
-			<pre>Connect status:, {JSON.stringify(socket)}</pre>
 			{socket ? (
 				<p className="text-green-500" key="connect">
-					Connected id: {socket.id}
+					Connected
 				</p>
 			) : (
 				<p className="text-red-500" key="disconnect">
