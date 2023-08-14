@@ -3,4 +3,4 @@ frontend/.next
 backend/static
 frontend/out
 main
-backend/data.db
+data.db

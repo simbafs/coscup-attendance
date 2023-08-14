@@ -28,8 +28,8 @@ var (
 	BuildTime  = "n/a"
 )
 
-func run(addr string) error {
-	err := db.OpenDB()
+func run(addr string, dbPath string) error {
+	err := db.OpenDB(dbPath)
 	if err != nil {
 		return err
 	}
@@ -54,6 +54,9 @@ func main() {
 	addr := pflag.StringP("addr", "a", ":3000", "server address")
 	version := pflag.BoolP("version", "v", false, "show version")
 	pflag.StringVarP(&Mode, "mode", "m", Mode, "server mode")
+	dbPath := pflag.StringP("db", "d", "./data.db", "database path")
+	help := pflag.BoolP("help", "h", false, "show help")
+
 	pflag.Parse()
 
 	if *version {
@@ -61,8 +64,13 @@ func main() {
 		return
 	}
 
+	if *help {
+		pflag.Usage()
+		return
+	}
+
 	fmt.Printf("Server is running at %s\n", *addr)
-	if err := run(*addr); err != nil {
+	if err := run(*addr, *dbPath); err != nil {
 		fmt.Printf("Oops, there's an error: %v\n", err)
 		os.Exit(1)
 	}

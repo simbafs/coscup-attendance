@@ -1,6 +1,6 @@
 dev: 
-	tmux split-window -h make frontend
-	make backend
+	tmux split-window -h make frontendDev
+	make backendDev
 
 install:
 	cd ./frontend/ && pnpm install
@@ -8,10 +8,10 @@ install:
 	mkdir -p ./backend/static/ 
 	touch ./backend/static/.gitkeep
 
-backend: 
-	cd ./backend/ && nodemon -e go --watch './**/*.go' --signal SIGTERM --exec 'go' run .
+backendDev: 
+	cd ./backend/ && nodemon -e go --watch './**/*.go' --signal SIGTERM --exec 'go' run . --db ../data.db
 
-frontend:
+frontendDev:
 	cd ./frontend/ && npm run dev
 
 build: buildFrontend buildBackend
@@ -30,4 +30,4 @@ clear:
 	rm -rf ./frontend/out/ ./frontend/node_modules/ ./frontend/.next/
 	mkdir ./backend/static/
 
-.PHONY: backend frontend build buildBackend buildFrontend clear
+.PHONY: backendDev frontendDev build buildBackend buildFrontend clear
