@@ -29,7 +29,7 @@ var (
 	BuildTime  = "n/a"
 )
 
-var logger = log.New(log.Writer(), "[main] ", log.LstdFlags)
+var logger = log.New(log.Writer(), "[main] ", log.LstdFlags|log.Lmsgprefix|log.Lshortfile)
 
 func run(addr string, dbPath string, token string) error {
 	err := db.OpenDB(dbPath)

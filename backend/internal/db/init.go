@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var logger = log.New(log.Writer(), "[db] ", log.LstdFlags)
+var logger = log.New(log.Writer(), "[db] ", log.LstdFlags|log.Lmsgprefix|log.Lshortfile)
 
 type RawData struct {
 	Sessions []struct {

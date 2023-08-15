@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var logger = log.New(log.Writer(), "[api] ", log.LstdFlags)
+var logger = log.New(log.Writer(), "[api] ", log.LstdFlags|log.Lmsgprefix|log.Lshortfile)
 
 func errorRes(c *gin.Context, err error) {
 	logger.Printf("%s: %v", c.FullPath(), err)
