@@ -3,9 +3,12 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
+
+var logger = log.New(log.Writer(), "[db] ", log.LstdFlags)
 
 type RawData struct {
 	Sessions []struct {
@@ -83,7 +86,7 @@ func getRawData(url string) (data RawData, err error) {
 	return
 }
 
-func InitDB(url string) error {
+func InitDB(url string, token string) error {
 	_, err := DB.Exec(`
 	    CREATE TABLE IF NOT EXISTS attendance(
 			id         VARCHAR(8) NOT NULL PRIMARY KEY
@@ -101,11 +104,13 @@ func InitDB(url string) error {
 	if err != nil {
 		return fmt.Errorf("crreate table db.Exec: %w", err)
 	}
+	logger.Println("create table")
 
 	data, err := getRawData(url)
 	if err != nil {
 		return fmt.Errorf("getRawData: %w", err)
 	}
+	logger.Printf("get raw data from %s", url)
 
 	stmt, err := DB.Prepare(`INSERT OR IGNORE INTO attendance (id, attendance) VALUES (?, ?);`)
 	if err != nil {
@@ -114,17 +119,17 @@ func InitDB(url string) error {
 	defer stmt.Close()
 
 	for _, session := range data.Sessions {
-		fmt.Printf("%s\n", session.ID)
 		_, err := stmt.Exec(session.ID, 0)
 		if err != nil {
 			return err
 		}
 	}
 
-	_, err = DB.Exec(`INSERT OR IGNORE INTO token (token) VALUES ("token");`)
+	_, err = DB.Exec(`INSERT OR IGNORE INTO token (token) VALUES (?);`, token)
 	if err != nil {
 		return fmt.Errorf("token db.Exec: %w", err)
 	}
+	logger.Println("prepare attendance")
 
 	return nil
 }

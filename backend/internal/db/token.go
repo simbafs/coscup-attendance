@@ -8,6 +8,9 @@ import (
 var ErrInvalidToken = errors.New("invalid token")
 
 func VerifyToken(token string) error {
+	if token == "" {
+		return ErrInvalidToken
+	}
 	// find token in DB token table
 	// if token is found, return nil
 	// if token is not found, return ErrInvalidToken

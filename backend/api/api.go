@@ -4,14 +4,16 @@ import (
 	"backend/internal/db"
 	"backend/pkg/websocket"
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
+var logger = log.New(log.Writer(), "[api] ", log.LstdFlags)
+
 func errorRes(c *gin.Context, err error) {
-	fmt.Println(err)
+	logger.Printf("%s: %v", c.FullPath(), err)
 	c.JSON(http.StatusInternalServerError, gin.H{
 		"status":  "error",
 		"message": err.Error(),
@@ -40,8 +42,6 @@ func Route(r *gin.Engine, io websocket.IO) {
 			errorRes(c, err)
 			return
 		}
-
-		fmt.Println(data)
 
 		if err := db.Update(data); err != nil {
 			errorRes(c, err)
