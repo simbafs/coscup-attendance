@@ -3,8 +3,10 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -75,15 +77,48 @@ type RawData struct {
 	} `json:"tags"`
 }
 
-func getRawData(url string) (data RawData, err error) {
+// getRawData download session.json if not exist in ../frontend/public/session.json and parse it
+func getRawData(url string) (*RawData, error) {
+	var rawData RawData
+	localFile := "../frontend/public/session.json"
+	if _, err := os.Stat(localFile); err == nil {
+		// file exist
+		logger.Printf("load session from %s\n", localFile)
+
+		file, err := os.Open(localFile)
+		if err != nil {
+			return nil, fmt.Errorf("os.Open: %w", err)
+		}
+		defer file.Close()
+
+		err = json.NewDecoder(file).Decode(&rawData)
+		return &rawData, err
+	}
+
+	logger.Printf("download session from %s\n", url)
+
+	// file not exist
 	res, err := http.Get(url)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("http.Get: %w", err)
 	}
-	defer res.Body.Close()
 
-	err = json.NewDecoder(res.Body).Decode(&data)
-	return
+	resp, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: %w", err)
+	}
+
+	err = json.Unmarshal(resp, &rawData)
+	if err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: %w", err)
+	}
+
+	err = os.WriteFile(localFile, resp, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("os.WriteFile: %w", err)
+	}
+
+	return &rawData, nil
 }
 
 func InitDB(url string, token string) error {
@@ -110,7 +145,7 @@ func InitDB(url string, token string) error {
 	if err != nil {
 		return fmt.Errorf("getRawData: %w", err)
 	}
-	logger.Printf("get raw data from %s", url)
+	logger.Printf("get raw data")
 
 	stmt, err := DB.Prepare(`INSERT OR IGNORE INTO attendance (id, attendance) VALUES (?, ?);`)
 	if err != nil {
@@ -119,7 +154,7 @@ func InitDB(url string, token string) error {
 	defer stmt.Close()
 
 	for _, session := range data.Sessions {
-		_, err := stmt.Exec(session.ID, 0)
+		_, err = stmt.Exec(session.ID, 0)
 		if err != nil {
 			return err
 		}

@@ -4,3 +4,4 @@ backend/static
 frontend/out
 main
 data.db
+frontend/public/session.json

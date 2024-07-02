@@ -38,17 +38,11 @@ export default function Home() {
 		<>
 			<Head>
 				<title>製播組統計議程人數統計</title>
-				<link
-					href="https://coscup.org/2023/favicon.svg"
-					rel="icon"
-					type="image/svg+xml"
-				/>
+				<link href="https://coscup.org/2023/favicon.svg" rel="icon" type="image/svg+xml" />
 			</Head>
 			<div className="w-screen min-h-screen flex flex-col dark:bg-stone-950 dark:text-stone-50">
 				<div className="w-full grow flex flex-col justify-center items-center">
-					<h1 className="text-center text-2xl font-semibold">
-						製播組議程人數統計
-					</h1>
+					<h1 className="text-center text-2xl font-semibold">製播組議程人數統計</h1>
 					{valid ? (
 						<WithToken token={token} />
 					) : (
@@ -57,9 +51,7 @@ export default function Home() {
 								e.preventDefault()
 							}}
 						>
-							<h1 className="text-center text-xl">
-								請輸入 Token
-							</h1>
+							<h1 className="text-center text-xl">請輸入 Token</h1>
 							<input
 								type="text"
 								className={box({
@@ -79,9 +71,8 @@ export default function Home() {
 
 function WithToken({ token }) {
 	const { socket, lastMessage } = useWS('ws://localhost:3000/ws')
-	const { data, error } = useSWR(
-		`https://coscup.org/2023/json/session.json?token=${token}`,
-		url => fetch(url).then(res => res.json())
+	const { data, error } = useSWR(`https://coscup.org/2023/json/session.json`, url =>
+		fetch(url).then(res => res.json()),
 	)
 	const [attendance, updateAttendance] = useReducer((state, action) => {
 		if (action.overwrite) {
@@ -107,7 +98,7 @@ function WithToken({ token }) {
 				updateAttendance({
 					data: data.attendance,
 					overwrite: true,
-				})
+				}),
 			)
 			.then(() => console.log('attendance loaded'))
 	}, [token])
@@ -138,12 +129,7 @@ function WithToken({ token }) {
 					<pre>{JSON.stringify(error, null, 2)}</pre>
 				</div>
 			) : data && attendance ? (
-				<Table
-					data={data}
-					attendance={attendance}
-					updateAttendance={updateAttendance}
-					connected={!!socket}
-				/>
+				<Table data={data} attendance={attendance} updateAttendance={updateAttendance} connected={!!socket} />
 			) : (
 				<div className="text-center my-4">Loading...</div>
 			)}
@@ -162,7 +148,7 @@ function Table({ data, attendance, updateAttendance, connected }) {
 			}
 			return oldDay
 		},
-		29
+		29,
 	)
 	const [room, setRoom] = useLocalStorageReducer(
 		'room',
@@ -172,7 +158,7 @@ function Table({ data, attendance, updateAttendance, connected }) {
 			}
 			return oldRoom
 		},
-		'AU'
+		'AU',
 	)
 
 	const [diff, setDiff] = useState([])
@@ -205,7 +191,7 @@ function Table({ data, attendance, updateAttendance, connected }) {
 				}
 
 				return arr
-			}, [])
+			}, []),
 		)
 		updateAttendance(update)
 	}
@@ -227,7 +213,7 @@ function Table({ data, attendance, updateAttendance, connected }) {
 
 	let groupedSessions = groupBy(
 		data.sessions.filter(item => new Date(item.start).getDate() == day),
-		'room'
+		'room',
 	)[room]
 	// sort by start time
 	groupedSessions.sort((a, b) => {
@@ -239,20 +225,12 @@ function Table({ data, attendance, updateAttendance, connected }) {
 	return (
 		<>
 			<div className="text-center my-4">
-				<select
-					value={day}
-					onChange={e => setDay(e.target.value)}
-					className={box()}
-				>
+				<select value={day} onChange={e => setDay(e.target.value)} className={box()}>
 					<option value={29}>7/29</option>
 					<option value={30}>7/30</option>
 				</select>
 				的
-				<select
-					value={room}
-					onChange={e => setRoom(e.target.value)}
-					className={box()}
-				>
+				<select value={room} onChange={e => setRoom(e.target.value)} className={box()}>
 					{rooms.map(room => (
 						<option key={room} value={room}>
 							{room}
@@ -307,8 +285,7 @@ function Session({ session, attendance, setAttendance, connected }) {
 		<>
 			<div className="my-auto">
 				<span>
-					{getFormatedDate(session.start)} -{' '}
-					{getFormatedDate(session.end)}
+					{getFormatedDate(session.start)} - {getFormatedDate(session.end)}
 				</span>
 			</div>
 			<input
@@ -320,9 +297,7 @@ function Session({ session, attendance, setAttendance, connected }) {
 				disabled={!connected}
 			/>
 			<div className="my-auto">
-				<span className="text-right break-words">
-					{session.zh.title}
-				</span>
+				<span className="text-right break-words">{session.zh.title}</span>
 			</div>
 		</>
 	)
