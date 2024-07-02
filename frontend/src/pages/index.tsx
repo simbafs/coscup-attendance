@@ -1,10 +1,9 @@
 // hooks
 import { useReducer, useState, useEffect } from 'react'
-import { useDebounce } from 'usehooks-ts'
 import useSWR from 'swr'
-import useLocalStorageReducer from '@/hooks/useLocalStorageReducer'
 import useWS from '@/hooks/useWS'
 import { useRouter } from 'next/router'
+import { useDay, useRoom } from '@/hooks/useParams'
 
 // components
 import Head from 'next/head'
@@ -13,13 +12,17 @@ import Footer from '@/components/footer'
 // others
 import box from '@/variants/box'
 import shouldParse from '../libs/shouldParse'
+import { Diff, useDiff } from '@/hooks/useDiff'
+import { Sessions, Session as TSession } from '@/types/session'
+import { Attendance } from '@/types/attendance'
 
 export default function Home() {
 	const router = useRouter()
-	const [token, setToken] = useState(router.query.token || '')
+	const [token, setToken] = useState('')
 	const [valid, setValid] = useState(false)
 
-	useEffect(() => {
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	function checkToken(token: string) {
 		fetch(`/api/verify?token=${token}`)
 			.then(res => res.json())
 			.then(data => {
@@ -28,11 +31,18 @@ export default function Home() {
 					router.push(`/?token=${token}`)
 				}
 			})
-	}, [token])
+	}
 
+	// TODO: move validation to server side
 	useEffect(() => {
-		if (router.query.token) setToken(router.query.token)
-	}, [router.query.token])
+		let t = router.query.token
+		if (!t) return
+		if (router.query.token) {
+			t = Array.isArray(t) ? t[0] : t
+			setToken(t)
+			checkToken(t)
+		}
+	}, [router.query.token, checkToken])
 
 	return (
 		<>
@@ -49,6 +59,7 @@ export default function Home() {
 						<form
 							onSubmit={e => {
 								e.preventDefault()
+								checkToken(token)
 							}}
 						>
 							<h1 className="text-center text-xl">請輸入 Token</h1>
@@ -69,21 +80,28 @@ export default function Home() {
 	)
 }
 
-function WithToken({ token }) {
+function WithToken({ token }: { token: string }) {
 	const { socket, lastMessage } = useWS('ws://localhost:3000/ws')
-	const { data, error } = useSWR(`https://coscup.org/2023/json/session.json`, url =>
-		fetch(url).then(res => res.json()),
-	)
-	const [attendance, updateAttendance] = useReducer((state, action) => {
-		if (action.overwrite) {
-			return action.data
-		}
-		if (!state) return state
+	const { data, error } = useSWR<Sessions>(`/session.json`, url => fetch(url).then(res => res.json()))
+	const [attendance, updateAttendance] = useReducer(
+		(
+			state: Attendance,
+			action: {
+				data: Attendance
+				overwrite: boolean
+			},
+		) => {
+			if (action.overwrite) {
+				return action.data
+			}
+			if (!state) return state
 
-		const r = { ...state }
-		r[action.id] = Number(action.attendance)
-		return r
-	}, undefined)
+			const r = { ...state, ...action.data }
+			// r[action.id] = Number(action.attendance)
+			return r
+		},
+		{},
+	)
 
 	useEffect(() => {
 		console.log({ lastMessage })
@@ -94,6 +112,10 @@ function WithToken({ token }) {
 		console.log('fetching attendance')
 		fetch(`/api/attendance?token=${token}`)
 			.then(res => res.json())
+			.then(data => {
+				console.log('!!!', data)
+				return data
+			})
 			.then(data =>
 				updateAttendance({
 					data: data.attendance,
@@ -106,10 +128,17 @@ function WithToken({ token }) {
 	useEffect(() => console.log({ token }), [token])
 
 	useEffect(() => {
-		const dataArray = shouldParse(lastMessage, [])
+		const dataArray = shouldParse<Diff[]>(lastMessage, [])
+
+		let update: Record<string, number> = {}
 		for (let data of dataArray) {
-			updateAttendance(data)
+			update[data.id] = data.attendance
 		}
+
+		updateAttendance({
+			data: update,
+			overwrite: false,
+		})
 	}, [lastMessage])
 
 	return (
@@ -137,88 +166,51 @@ function WithToken({ token }) {
 	)
 }
 
-function Table({ data, attendance, updateAttendance, connected }) {
+function Table({
+	data,
+	attendance,
+	updateAttendance,
+	connected,
+}: {
+	data: Sessions
+	attendance: Attendance
+	updateAttendance: React.Dispatch<{
+		data: Attendance
+		overwrite: boolean
+	}>
+	connected: boolean
+}) {
 	const rooms = data.rooms.map(r => r.id)
 
-	const [day, setDay] = useLocalStorageReducer(
-		'day',
-		(oldDay, newDay) => {
-			if (newDay == 29 || newDay == 30) {
-				return newDay
-			}
-			return oldDay
-		},
-		29,
-	)
-	const [room, setRoom] = useLocalStorageReducer(
-		'room',
-		(oldRoom, newRoom) => {
-			if (rooms.includes(newRoom)) {
-				return newRoom
-			}
-			return oldRoom
-		},
-		'AU',
-	)
+	const [day, setDay] = useDay(['29', '30'], '29')
+	const [room, setRoom] = useRoom(rooms, 'AU')
 
-	const [diff, setDiff] = useState([])
-	const debuuncedDiff = useDebounce(diff, 300)
-
-	useEffect(() => {
-		if (debuuncedDiff.length == 0) return
-		fetch('/api/attendance', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(debuuncedDiff),
-		})
-			.then(res => res.json())
-			.then(console.log)
-			.catch(console.error)
-			.finally(() => setDiff([]))
-		// .then(setAttendance)
-	}, [debuuncedDiff])
-
-	const appendDiff = update => {
-		setDiff(diff =>
-			diff.concat(update).reduce((arr, item) => {
-				const pre = arr.findIndex(i => i.id == item.id)
-				if (pre >= 0) {
-					arr[pre] = item
-				} else {
-					arr = arr.concat(item)
-				}
-
-				return arr
-			}, []),
-		)
-		updateAttendance(update)
-	}
+	const [appendDiff] = useDiff(updateAttendance)
 
 	// init day and room
-	useEffect(() => {
-		if (!localStorage) return
-
-		let day = localStorage.getItem('day')
-		let room = localStorage.getItem('room')
-
-		if (day) {
-			setDay(day)
-		}
-		if (room) {
-			setRoom(room)
-		}
-	}, [setDay, setRoom])
+	// useEffect(() => {
+	// 	if (!localStorage) return
+	//
+	// 	let day = localStorage.getItem('day')
+	// 	let room = localStorage.getItem('room')
+	//
+	// 	if (day) {
+	// 		setDay(day)
+	// 	}
+	// 	if (room) {
+	// 		setRoom(room)
+	// 	}
+	// }, [setDay, setRoom])
 
 	let groupedSessions = groupBy(
-		data.sessions.filter(item => new Date(item.start).getDate() == day),
+		data.sessions.filter(item => new Date(item.start).getDate() == Number(day)),
 		'room',
 	)[room]
+
 	// sort by start time
 	groupedSessions.sort((a, b) => {
-		let timeA = new Date(a.start)
-		let timeB = new Date(b.start)
+		const timeA = new Date(a.start).getTime()
+		const timeB = new Date(b.start).getTime()
 		return timeA - timeB
 	})
 
@@ -261,10 +253,10 @@ function Table({ data, attendance, updateAttendance, connected }) {
 	)
 }
 
-function groupBy(arr, key) {
-	let result = {}
+function groupBy<T extends Record<string, any>>(arr: T[], key: keyof T): Record<string, T[]> {
+	let result: Record<string, T[]> = {}
 	arr.forEach(item => {
-		let value = item[key]
+		let value = String(item[key]) // Ensure the key is treated as a string
 		if (!result[value]) {
 			result[value] = []
 		}
@@ -273,14 +265,24 @@ function groupBy(arr, key) {
 	return result
 }
 
-function getFormatedDate(dateStr) {
+function getFormatedDate(dateStr: string) {
 	let time = new Date(dateStr)
-	let to2 = n => (n < 10 ? `0${n}` : `${n}`)
+	let to2 = (n: number) => (n < 10 ? `0${n}` : `${n}`)
 
 	return `${to2(time.getHours())}:${to2(time.getMinutes())}`
 }
 
-function Session({ session, attendance, setAttendance, connected }) {
+function Session({
+	session,
+	attendance,
+	setAttendance,
+	connected,
+}: {
+	session: TSession
+	attendance: number
+	setAttendance: (n: number) => void
+	connected: boolean
+}) {
 	return (
 		<>
 			<div className="my-auto">

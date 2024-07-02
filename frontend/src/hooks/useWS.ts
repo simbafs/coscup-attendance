@@ -1,35 +1,33 @@
 import { useState, useEffect } from 'react'
 
-/**
- * hook for websocket
- * @param {string} path
- * @param {object} opt
- * @param {boolean} opt.reconnect
- * @param {number} opt.reconnectInterval -- in ms
- * @returns {{
- *  socket: WebSocket,
- *  lastMessage: string,
- *  error: Error,
- * }}
- *
- */
+interface WebSocketOptions {
+	reconnect: boolean
+	reconnectInterval: number // in ms
+}
+
+interface WebSocketHook {
+	socket: WebSocket | null
+	lastMessage: string | null
+	error: Event | null
+}
+
 export default function useWS(
-	path,
-	opt = { reconnect: true, reconnectInterval: 500 }
-) {
+	path: string,
+	opt: WebSocketOptions = { reconnect: true, reconnectInterval: 500 },
+): WebSocketHook {
 	// output
-	const [socket, setSocket] = useState(null)
-	const [lastMessage, setLastMessage] = useState(null)
-	const [error, setError] = useState(null)
+	const [socket, setSocket] = useState<WebSocket | null>(null)
+	const [lastMessage, setLastMessage] = useState<string | null>(null)
+	const [error, setError] = useState<Event | null>(null)
 
 	// status
 	const isBrowser = typeof window !== 'undefined'
 	const [hasConnected, setHasConnected] = useState(false)
 
-	// tritter
+	// trigger
 	const [triggerReconnect, setTriggerReconnect] = useState(0)
 
-	const connect = path => {
+	const connect = (path: string) => {
 		const s = new WebSocket(path)
 		console.log({ s })
 		setSocket(s)
@@ -59,15 +57,7 @@ export default function useWS(
 			return () => clearTimeout(timeout)
 		}
 		console.log('trying to connect to', path)
-	}, [
-		isBrowser,
-		path,
-		socket,
-		hasConnected,
-		opt.reconnect,
-		opt.reconnectInterval,
-		triggerReconnect,
-	])
+	}, [isBrowser, path, socket, hasConnected, opt.reconnect, opt.reconnectInterval, triggerReconnect])
 
 	useEffect(() => {
 		if (!socket) return
@@ -77,8 +67,8 @@ export default function useWS(
 			console.log(`disconnected from ${path}`)
 			setSocket(null)
 		}
-		const handleMessage = event => setLastMessage(event.data)
-		const handleError = event => {
+		const handleMessage = (event: MessageEvent) => setLastMessage(event.data)
+		const handleError = (event: Event) => {
 			console.log('socket error', event)
 			setTriggerReconnect(t => t + 1)
 			setError(event)
@@ -97,7 +87,7 @@ export default function useWS(
 			socket.close()
 			setSocket(null)
 		}
-	}, [socket])
+	}, [socket, path])
 
 	return {
 		socket,
