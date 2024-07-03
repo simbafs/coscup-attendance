@@ -1,7 +1,7 @@
 package websocket
 
 import (
-	"log"
+	"backend/internal/logger"
 	"math/rand"
 	"net/http"
 	"time"
@@ -9,6 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	gwebsocket "github.com/gorilla/websocket"
 )
+
+var log = logger.New("websocket")
 
 var upgrader = gwebsocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {

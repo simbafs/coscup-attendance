@@ -4,11 +4,11 @@ import (
 	"backend/api"
 	"backend/internal/db"
 	"backend/internal/fileserver"
+	"backend/internal/logger"
 	"backend/internal/staticfs"
-	"backend/pkg/websocket"
+	"backend/internal/websocket"
 	"embed"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -29,14 +29,14 @@ var (
 	BuildTime  = "n/a"
 )
 
-var logger = log.New(log.Writer(), "[main] ", log.LstdFlags|log.Lmsgprefix|log.Lshortfile)
+var log = logger.New("main")
 
 func run(addr string, dbPath string, token string) error {
 	err := db.OpenDB(dbPath)
 	if err != nil {
 		return err
 	}
-	logger.Printf("Database connected")
+	log.Printf("Database connected")
 
 	err = db.InitDB("https://coscup.org/2023/json/session.json", token)
 	if err != nil {
@@ -51,7 +51,7 @@ func run(addr string, dbPath string, token string) error {
 	api.Route(r, io)
 	fileserver.Route(r, static, Mode)
 
-	logger.Printf("Listening at %s\n", addr)
+	log.Printf("Listening at %s\n", addr)
 	return r.Run(addr)
 }
 
@@ -81,7 +81,7 @@ func main() {
 	addr := fmt.Sprintf("%s:%d", *host, *port)
 
 	if err := run(addr, *dbPath, token); err != nil {
-		logger.Printf("Oops, there's an error: %v\n", err)
+		log.Printf("Oops, there's an error: %v\n", err)
 		os.Exit(1)
 	}
 }

@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"bytes"
-	"log"
 	"math/rand"
 	"time"
 

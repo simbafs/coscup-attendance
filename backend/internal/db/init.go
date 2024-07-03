@@ -1,16 +1,16 @@
 package db
 
 import (
+	"backend/internal/logger"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"time"
 )
 
-var logger = log.New(log.Writer(), "[db] ", log.LstdFlags|log.Lmsgprefix|log.Lshortfile)
+var log = logger.New("db")
 
 type RawData struct {
 	Sessions []struct {
@@ -83,7 +83,7 @@ func getRawData(url string) (*RawData, error) {
 	localFile := "../frontend/public/session.json"
 	if _, err := os.Stat(localFile); err == nil {
 		// file exist
-		logger.Printf("load session from %s\n", localFile)
+		log.Printf("load session from %s\n", localFile)
 
 		file, err := os.Open(localFile)
 		if err != nil {
@@ -95,7 +95,7 @@ func getRawData(url string) (*RawData, error) {
 		return &rawData, err
 	}
 
-	logger.Printf("download session from %s\n", url)
+	log.Printf("download session from %s\n", url)
 
 	// file not exist
 	res, err := http.Get(url)
@@ -139,13 +139,13 @@ func InitDB(url string, token string) error {
 	if err != nil {
 		return fmt.Errorf("crreate table db.Exec: %w", err)
 	}
-	logger.Println("create table")
+	log.Println("create table")
 
 	data, err := getRawData(url)
 	if err != nil {
 		return fmt.Errorf("getRawData: %w", err)
 	}
-	logger.Printf("get raw data")
+	log.Printf("get raw data")
 
 	stmt, err := DB.Prepare(`INSERT OR IGNORE INTO attendance (id, attendance) VALUES (?, ?);`)
 	if err != nil {
@@ -164,7 +164,7 @@ func InitDB(url string, token string) error {
 	if err != nil {
 		return fmt.Errorf("token db.Exec: %w", err)
 	}
-	logger.Println("prepare attendance")
+	log.Println("prepare attendance")
 
 	return nil
 }

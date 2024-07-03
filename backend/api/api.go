@@ -2,10 +2,12 @@ package api
 
 import (
 	"backend/internal/db"
-	"backend/pkg/websocket"
+	"backend/internal/websocket"
+	middleware "backend/middlewares"
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,6 +25,8 @@ func errorRes(c *gin.Context, err error) {
 func Route(r *gin.Engine, io websocket.IO) {
 	api := r.Group("/api")
 
+	auth := middleware.Token([]string{os.Getenv("TOKEN"), "devtoken"})
+
 	api.GET("/attendance", func(c *gin.Context) {
 		attendance, err := db.GetAttendanceData()
 		if err != nil {
@@ -36,7 +40,7 @@ func Route(r *gin.Engine, io websocket.IO) {
 		})
 	})
 
-	api.POST("/attendance", func(c *gin.Context) {
+	api.POST("/attendance", auth, func(c *gin.Context) {
 		var data []db.UpdateData
 		if err := c.ShouldBindJSON(&data); err != nil {
 			errorRes(c, err)
@@ -61,11 +65,11 @@ func Route(r *gin.Engine, io websocket.IO) {
 		})
 	})
 
-	api.GET("/verify", func(c *gin.Context) {
-		if err := db.VerifyToken(c.Query("token")); err != nil {
-			errorRes(c, err)
-			return
-		}
+	api.GET("/verify", auth, func(c *gin.Context) {
+		// if err := db.VerifyToken(c.Query("token")); err != nil {
+		// 	errorRes(c, err)
+		// 	return
+		// }
 		c.JSON(http.StatusOK, gin.H{
 			"status": "ok",
 		})
