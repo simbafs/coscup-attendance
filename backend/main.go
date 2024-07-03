@@ -7,6 +7,8 @@ import (
 	"backend/internal/logger"
 	"backend/internal/staticfs"
 	"backend/internal/websocket"
+	mw "backend/middlewares"
+	"backend/middlewares/auth"
 	"embed"
 	"fmt"
 	"os"
@@ -38,18 +40,20 @@ func run(addr string, dbPath string, token string) error {
 	}
 	log.Printf("Database connected")
 
-	err = db.InitDB("https://coscup.org/2023/json/session.json", token)
+	err = db.InitDB("https://coscup.org/2023/json/session.json")
 	if err != nil {
 		return err
 	}
+
+	tokenF := auth.Token(token)
 
 	gin.SetMode(Mode)
 	r := gin.Default()
 	r.Use(gin.Recovery())
 
 	io := websocket.Route(r, nil)
-	api.Route(r, io)
-	fileserver.Route(r, static, Mode)
+	api.Route(r, io, auth.Auth(auth.Fail401, tokenF))
+	fileserver.Route(r, static, Mode, mw.Only(auth.Auth(auth.FailLogin, tokenF), "/"))
 
 	log.Printf("Listening at %s\n", addr)
 	return r.Run(addr)

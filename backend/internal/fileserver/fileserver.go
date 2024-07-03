@@ -19,11 +19,11 @@ func proxy(c *gin.Context) {
 	proxy.ServeHTTP(c.Writer, c.Request)
 }
 
-func Route(r *gin.Engine, static http.FileSystem, mode string) {
+func Route(r *gin.Engine, static http.FileSystem, mode string, middleware gin.HandlerFunc) {
 	// https://stackoverflow.com/questions/36357791/
 	if mode == gin.DebugMode {
-		r.Use(proxy)
+		r.Use(middleware, proxy)
 	} else {
-		r.NoRoute(gin.WrapH(http.FileServer(static)))
+		r.NoRoute(middleware, gin.WrapH(http.FileServer(static)))
 	}
 }

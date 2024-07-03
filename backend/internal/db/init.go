@@ -121,7 +121,7 @@ func getRawData(url string) (*RawData, error) {
 	return &rawData, nil
 }
 
-func InitDB(url string, token string) error {
+func InitDB(url string) error {
 	_, err := DB.Exec(`
 	    CREATE TABLE IF NOT EXISTS attendance(
 			id         VARCHAR(8) NOT NULL PRIMARY KEY
@@ -131,9 +131,6 @@ func InitDB(url string, token string) error {
 			time       DATETIME NOT NULL PRIMARY KEY 
 			,id         VARCHAR(6) NOT NULL
 			,attendance INTEGER  NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS token(
-			token VARCHAR(64) NOT NULL PRIMARY KEY
         );
     `)
 	if err != nil {
@@ -160,10 +157,6 @@ func InitDB(url string, token string) error {
 		}
 	}
 
-	_, err = DB.Exec(`INSERT OR IGNORE INTO token (token) VALUES (?);`, token)
-	if err != nil {
-		return fmt.Errorf("token db.Exec: %w", err)
-	}
 	log.Println("prepare attendance")
 
 	return nil

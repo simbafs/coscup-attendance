@@ -1,13 +1,9 @@
 // hooks
-import { useReducer, useState, useEffect } from 'react'
+import { useReducer, useEffect } from 'react'
 import useSWR from 'swr'
 import useWS from '@/hooks/useWS'
 import { useRouter } from 'next/router'
 import { useDay, useRoom } from '@/hooks/useParams'
-
-// components
-import Head from 'next/head'
-import Footer from '@/components/footer'
 
 // others
 import box from '@/variants/box'
@@ -17,70 +13,8 @@ import { Sessions, Session as TSession } from '@/types/session'
 import { Attendance } from '@/types/attendance'
 
 export default function Home() {
-	const router = useRouter()
-	const [token, setToken] = useState('')
-	const [valid, setValid] = useState(false)
+	const token = useRouter().query.token as string
 
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	function checkToken(token: string) {
-		fetch(`/api/verify?token=${token}`)
-			.then(res => res.json())
-			.then(data => {
-				if (data.status === 'ok') {
-					setValid(true)
-					router.push(`/?token=${token}`)
-				}
-			})
-	}
-
-	// TODO: move validation to server side
-	useEffect(() => {
-		let t = router.query.token
-		if (!t) return
-		if (router.query.token) {
-			t = Array.isArray(t) ? t[0] : t
-			setToken(t)
-			checkToken(t)
-		}
-	}, [router.query.token, checkToken])
-
-	return (
-		<>
-			<Head>
-				<title>製播組統計議程人數統計</title>
-				<link href="https://coscup.org/2023/favicon.svg" rel="icon" type="image/svg+xml" />
-			</Head>
-			<div className="w-screen min-h-screen flex flex-col dark:bg-stone-950 dark:text-stone-50">
-				<div className="w-full grow flex flex-col justify-center items-center">
-					<h1 className="text-center text-2xl font-semibold">製播組議程人數統計</h1>
-					{valid ? (
-						<WithToken token={token} />
-					) : (
-						<form
-							onSubmit={e => {
-								e.preventDefault()
-								checkToken(token)
-							}}
-						>
-							<h1 className="text-center text-xl">請輸入 Token</h1>
-							<input
-								type="text"
-								className={box({
-									borderColor: valid ? 'success' : 'error',
-								})}
-								value={token}
-								onChange={e => setToken(e.target.value)}
-							/>
-						</form>
-					)}
-				</div>
-				<Footer />
-			</div>
-		</>
-	)
-}
-
-function WithToken({ token }: { token: string }) {
 	const { socket, lastMessage } = useWS('ws://localhost:3000/ws')
 	const { data, error } = useSWR<Sessions>(`/session.json`, url => fetch(url).then(res => res.json()))
 	const [attendance, updateAttendance] = useReducer(

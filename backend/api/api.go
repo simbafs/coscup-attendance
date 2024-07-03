@@ -3,11 +3,9 @@ package api
 import (
 	"backend/internal/db"
 	"backend/internal/websocket"
-	middleware "backend/middlewares"
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,10 +20,8 @@ func errorRes(c *gin.Context, err error) {
 	})
 }
 
-func Route(r *gin.Engine, io websocket.IO) {
+func Route(r *gin.Engine, io websocket.IO, auth gin.HandlerFunc) {
 	api := r.Group("/api")
-
-	auth := middleware.Token([]string{os.Getenv("TOKEN"), "devtoken"})
 
 	api.GET("/attendance", func(c *gin.Context) {
 		attendance, err := db.GetAttendanceData()
