@@ -16,6 +16,26 @@ export interface RoomEn {
 	name: string
 }
 
+export const floors = {
+	'1F': ['AU', 'RB 105'],
+	'2F': ['TR 209', 'TR 210', 'TR 211', 'TR 212', 'TR 213', 'TR 214'],
+	'3F': ['TR 310-1', 'TR 311', 'TR 312', 'TR 313'],
+	'4F': ['TR 409-1', 'TR 410', 'TR 411', 'TR 412-1', 'TR 412-2', 'TR 413-1'],
+	'5F': ['TR 509', 'TR 510', 'TR 511', 'TR 512', 'TR 513'],
+	'6F': ['TR 609', 'TR 613', 'TR 614', 'TR 615', 'TR 616'],
+}
+
+export type Floor = keyof typeof floors
+
+export function getFloor(roomId: string) {
+	for (const [floor, rooms] of Object.entries(floors)) {
+		if (rooms.includes(roomId)) {
+			return floor
+		}
+	}
+	return null // Return null if the roomId is not found in any floor
+}
+
 export interface Session {
 	id: string
 	type: string

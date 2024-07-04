@@ -3,15 +3,15 @@ import { useReducer, useEffect } from 'react'
 import useSWR from 'swr'
 import useWS from '@/hooks/useWS'
 import { useRouter } from 'next/router'
-import { useDay, useRoom } from '@/hooks/useParams'
+import { useDay, useFloor } from '@/hooks/useParams'
 
 // others
 import box from '@/variants/box'
-import shouldParse from '../libs/shouldParse'
 import { Diff, useDiff } from '@/hooks/useDiff'
-import { Sessions, Session as TSession } from '@/types/session'
+import { Sessions, Session as TSession, floors, getFloor } from '@/types/session'
 import { Attendance } from '@/types/attendance'
 import { twMerge } from 'tailwind-merge'
+import { shouldParse } from '@/libs/util'
 
 export default function Home() {
 	const token = useRouter().query.token as string
@@ -115,10 +115,8 @@ function Table({
 	}>
 	connected: boolean
 }) {
-	const rooms = data.rooms.map(r => r.id)
-
 	const [day, setDay] = useDay(['29', '30'], '29')
-	const [room, setRoom] = useRoom(rooms, 'AU')
+	const [floor, setFloor] = useFloor('1F')
 
 	const [appendDiff] = useDiff(updateAttendance)
 
@@ -139,8 +137,8 @@ function Table({
 
 	let groupedSessions = groupBy(
 		data.sessions.filter(item => new Date(item.start).getDate() == Number(day)),
-		'room',
-	)[room]
+		s => getFloor(s.room) || '1F',
+	)[floor]
 
 	// sort by start time
 	groupedSessions.sort((a, b) => {
@@ -157,10 +155,10 @@ function Table({
 					<option value={30}>7/30</option>
 				</select>
 				的
-				<select value={room} onChange={e => setRoom(e.target.value)} className={box()}>
-					{rooms.map(room => (
-						<option key={room} value={room}>
-							{room}
+				<select value={floor} onChange={e => setFloor(e.target.value)} className={box()}>
+					{Object.keys(floors).map(floor => (
+						<option key={floor} value={floor}>
+							{floor}
 						</option>
 					))}
 				</select>
@@ -168,7 +166,7 @@ function Table({
 			</div>
 			<hr className="my-4" />
 
-			<div className="grid grid-cols-[minmax(100px,1fr)_3fr] md:grid-cols-4 mx-4 gap-2 md:mx-20">
+			<div className="grid grid-cols-[minmax(100px,1fr)_1fr_3fr] md:grid-cols-6 mx-4 gap-2 md:mx-20">
 				{groupedSessions.map(s => (
 					<Session
 						key={s.id}
@@ -188,14 +186,14 @@ function Table({
 	)
 }
 
-function groupBy<T extends Record<string, any>>(arr: T[], key: keyof T): Record<string, T[]> {
+function groupBy<T extends Record<string, any>>(arr: T[], fn: (item: T, index: number) => string): Record<string, T[]> {
 	let result: Record<string, T[]> = {}
-	arr.forEach(item => {
-		let value = String(item[key]) // Ensure the key is treated as a string
-		if (!result[value]) {
-			result[value] = []
+	arr.forEach((item, index) => {
+		const key = fn(item, index)
+		if (!result[key]) {
+			result[key] = []
 		}
-		result[value].push(item)
+		result[key].push(item)
 	})
 	return result
 }
@@ -221,10 +219,9 @@ function Session({
 	return (
 		<>
 			<div className="my-auto">
-				<span>
-					{getFormatedDate(session.start)} - {getFormatedDate(session.end)}
-				</span>
+				{getFormatedDate(session.start)} - {getFormatedDate(session.end)}
 			</div>
+			<div className="my-auto">{session.room}</div>
 			<input
 				type="number"
 				value={attendance}
@@ -233,10 +230,10 @@ function Session({
 				className={twMerge(box(), 'min-w-0')}
 				disabled={!connected}
 			/>
-			<div className="col-span-2">
+			<div className="col-span-3">
 				<span className="text-right break-words font-bold">{session.zh.title}</span>
 			</div>
-			<div className="col-span-2 md:col-span-4 border-t border-gray-400 my-2" />
+			<div className="col-span-3 md:col-span-6 border-t border-gray-400 my-2" />
 		</>
 	)
 }

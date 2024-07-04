@@ -1,5 +1,5 @@
 import { useReducer } from 'react'
-import shouldParse from '../libs/shouldParse'
+import { shouldParse } from '@/libs/util'
 
 export default function useLocalStorageReducer<T, V>(
 	key: string,
