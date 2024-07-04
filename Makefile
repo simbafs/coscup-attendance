@@ -52,8 +52,7 @@ depFrontend:
 	cd ./frontend/ && $(npm) install
 
 devBackend: 
-	cd ./backend/ && nodemon -e go --watch './**/*.go' --signal SIGTERM --exec 'go' run -tags dev . --db data.db
-
+	cd ./backend/ && nodemon -e go --watch './**/*.go' --signal SIGTERM --exec 'TOKEN=token go run -tags dev . --db data.db'
 devFrontend:
 	cd ./frontend/ && $(npm) run dev
 

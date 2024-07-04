@@ -11,6 +11,7 @@ import shouldParse from '../libs/shouldParse'
 import { Diff, useDiff } from '@/hooks/useDiff'
 import { Sessions, Session as TSession } from '@/types/session'
 import { Attendance } from '@/types/attendance'
+import { twMerge } from 'tailwind-merge'
 
 export default function Home() {
 	const token = useRouter().query.token as string
@@ -167,7 +168,7 @@ function Table({
 			</div>
 			<hr className="my-4" />
 
-			<div className="grid grid-cols-[110px_100px_4fr] lg:gap-2 gap-4">
+			<div className="grid grid-cols-[minmax(100px,1fr)_3fr] md:grid-cols-4 mx-4 gap-2 md:mx-20">
 				{groupedSessions.map(s => (
 					<Session
 						key={s.id}
@@ -229,12 +230,13 @@ function Session({
 				value={attendance}
 				min={0}
 				onChange={e => setAttendance(Number(e.target.value))}
-				className={box()}
+				className={twMerge(box(), 'min-w-0')}
 				disabled={!connected}
 			/>
-			<div className="my-auto">
-				<span className="text-right break-words">{session.zh.title}</span>
+			<div className="col-span-2">
+				<span className="text-right break-words font-bold">{session.zh.title}</span>
 			</div>
+			<div className="col-span-2 md:col-span-4 border-t border-gray-400 my-2" />
 		</>
 	)
 }
