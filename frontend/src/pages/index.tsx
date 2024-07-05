@@ -123,32 +123,34 @@ function Table({
 	let groupedSessions = groupBy(
 		data.sessions.filter(item => new Date(item.start).getDate() == Number(day)),
 		s => getFloor(s.room) || '1F',
-	)
-		// major sort by time, secondary sort by room order, this require > ECMAScript 2019
-		[floor].toSorted((a, b) => {
-			// sorted by the room order defined in `floors`
-			const idxA = floors[floor].indexOf(a.room)
-			const idxB = floors[floor].indexOf(b.room)
-			console.log(floors[floor])
-			console.log(a.room, b.room, idxA, idxB)
-			return idxA - idxB
-		})
-		.toSorted((a, b) => {
-			const timeA = new Date(a.start).getTime()
-			const timeB = new Date(b.start).getTime()
-			return timeA - timeB
-		})
-		.filter(s => {
-			if (time.invalid) return true
-			const startHour = new Date(s.start).getHours()
-			const startMinute = new Date(s.start).getMinutes()
-			const endHour = new Date(s.end).getHours()
-			const endMinute = new Date(s.end).getMinutes()
-			return (
-				(time.hour > startHour || (time.hour == startHour && time.minute >= startMinute)) &&
-				(time.hour < endHour || (time.hour == endHour && time.minute <= endMinute))
-			)
-		})
+	)[floor]
+
+	// major sort by time, secondary sort by room order, this require > ECMAScript 2019
+	groupedSessions.sort((a, b) => {
+		// sorted by the room order defined in `floors`
+		const idxA = floors[floor].indexOf(a.room)
+		const idxB = floors[floor].indexOf(b.room)
+		console.log(floors[floor])
+		console.log(a.room, b.room, idxA, idxB)
+		return idxA - idxB
+	})
+	groupedSessions.sort((a, b) => {
+		const timeA = new Date(a.start).getTime()
+		const timeB = new Date(b.start).getTime()
+		return timeA - timeB
+	})
+
+	groupedSessions = groupedSessions.filter(s => {
+		if (time.invalid) return true
+		const startHour = new Date(s.start).getHours()
+		const startMinute = new Date(s.start).getMinutes()
+		const endHour = new Date(s.end).getHours()
+		const endMinute = new Date(s.end).getMinutes()
+		return (
+			(time.hour > startHour || (time.hour == startHour && time.minute >= startMinute)) &&
+			(time.hour < endHour || (time.hour == endHour && time.minute <= endMinute))
+		)
+	})
 
 	return (
 		<>
