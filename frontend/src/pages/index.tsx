@@ -3,12 +3,12 @@ import { useReducer, useEffect } from 'react'
 import useSWR from 'swr'
 import useWS from '@/hooks/useWS'
 import { useRouter } from 'next/router'
-import { useDay, useFloor } from '@/hooks/useParams'
+import { useDay, useFloor, useTime } from '@/hooks/useParams'
 
 // others
 import box from '@/variants/box'
 import { Diff, useDiff } from '@/hooks/useDiff'
-import { Sessions, Session as TSession, getFloor } from '@/types/session'
+import { Sessions, Session as TSession, floors, getFloor } from '@/types/session'
 import { Attendance } from '@/types/attendance'
 import { twMerge } from 'tailwind-merge'
 import { shouldParse } from '@/libs/util'
@@ -114,29 +114,53 @@ function Table({
 }) {
 	const [day, Day] = useDay('29')
 	const [floor, Floor] = useFloor('1F')
+	const [time, Time] = useTime({ hour: 0, minute: 0 })
+
+	useEffect(() => console.log({ day, floor, time }), [day, floor, time])
 
 	const [appendDiff] = useDiff(updateAttendance)
 
 	let groupedSessions = groupBy(
 		data.sessions.filter(item => new Date(item.start).getDate() == Number(day)),
 		s => getFloor(s.room) || '1F',
-	)[floor]
-
-	// sort by start time
-	groupedSessions.sort((a, b) => {
-		const timeA = new Date(a.start).getTime()
-		const timeB = new Date(b.start).getTime()
-		return timeA - timeB
-	})
+	)
+		// major sort by time, secondary sort by room order, this require > ECMAScript 2019
+		[floor].toSorted((a, b) => {
+			// sorted by the room order defined in `floors`
+			const idxA = floors[floor].indexOf(a.room)
+			const idxB = floors[floor].indexOf(b.room)
+			console.log(floors[floor])
+			console.log(a.room, b.room, idxA, idxB)
+			return idxA - idxB
+		})
+		.toSorted((a, b) => {
+			const timeA = new Date(a.start).getTime()
+			const timeB = new Date(b.start).getTime()
+			return timeA - timeB
+		})
+		.filter(s => {
+			if (time.invalid) return true
+			const startHour = new Date(s.start).getHours()
+			const startMinute = new Date(s.start).getMinutes()
+			const endHour = new Date(s.end).getHours()
+			const endMinute = new Date(s.end).getMinutes()
+			return (
+				(time.hour > startHour || (time.hour == startHour && time.minute >= startMinute)) &&
+				(time.hour < endHour || (time.hour == endHour && time.minute <= endMinute))
+			)
+		})
 
 	return (
 		<>
 			<div className="text-center my-4">
+				日期
 				<Day />
-				的
+				樓層
 				<Floor />
+				時間
+				<Time />
+				（清除以顯示全部）
 			</div>
-			<hr className="my-4" />
 
 			<div className="grid grid-cols-[minmax(100px,1fr)_1fr_3fr] md:grid-cols-6 mx-4 gap-2 md:mx-20">
 				{groupedSessions.map(s => (

@@ -68,3 +68,39 @@ export function useFloor(defaultFloor: Floor) {
 		),
 	] as const
 }
+
+export type Time = {
+	hour: number
+	minute: number
+	invalid?: boolean
+}
+
+export function useTime(defaultTime: Time) {
+	const [time, setTime] = useLocalStorageReducer<Time, string>(
+		'time',
+		(oldTime, newTime) => {
+			const [hour, minute] = newTime.split(':').map(Number)
+			if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+				return oldTime
+			}
+			return {
+				hour,
+				minute,
+				invalid: newTime === '',
+			}
+		},
+		defaultTime,
+	)
+
+	return [
+		time,
+		() => (
+			<input
+				type="time"
+				value={`${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`}
+				onChange={e => setTime(e.target.value)}
+				className={box()}
+			/>
+		),
+	] as const
+}

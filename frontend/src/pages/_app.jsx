@@ -11,7 +11,7 @@ export default function App({ Component, pageProps }) {
 			</Head>
 			<div className="w-screen min-h-screen flex flex-col dark:bg-stone-950 dark:text-stone-50">
 				<div className="w-full grow flex flex-col justify-center items-center">
-					<h1 className="text-center text-2xl font-semibold">製播組議程人數統計</h1>
+					<h1 className="text-center text-2xl font-semibold mt-20 mb-5">製播組議程人數統計</h1>
 					<Component {...pageProps} />
 				</div>
 				<Footer />
