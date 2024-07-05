@@ -16,6 +16,7 @@ export interface RoomEn {
 	name: string
 }
 
+// TODO: modify this every year
 export const floors = {
 	'1F': ['AU', 'RB 105'],
 	'2F': ['TR 209', 'TR 210', 'TR 211', 'TR 212', 'TR 213', 'TR 214'],
@@ -25,7 +26,16 @@ export const floors = {
 	'6F': ['TR 609', 'TR 613', 'TR 614', 'TR 615', 'TR 616'],
 }
 
-export type Floor = keyof typeof floors
+// TODO: modify this every year
+export const days = {
+	'29': '7/29',
+	'30': '7/30',
+}
+
+export type Floors = typeof floors
+export type Floor = keyof Floors
+export type Days = typeof days
+export type Day = keyof Days
 
 export function getFloor(roomId: string) {
 	for (const [floor, rooms] of Object.entries(floors)) {

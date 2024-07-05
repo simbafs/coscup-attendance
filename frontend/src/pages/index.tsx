@@ -8,7 +8,7 @@ import { useDay, useFloor } from '@/hooks/useParams'
 // others
 import box from '@/variants/box'
 import { Diff, useDiff } from '@/hooks/useDiff'
-import { Sessions, Session as TSession, floors, getFloor } from '@/types/session'
+import { Sessions, Session as TSession, getFloor } from '@/types/session'
 import { Attendance } from '@/types/attendance'
 import { twMerge } from 'tailwind-merge'
 import { shouldParse } from '@/libs/util'
@@ -38,12 +38,9 @@ export default function Home() {
 		{},
 	)
 
+	// get initial attendance
 	useEffect(() => {
-		console.log({ lastMessage })
-	}, [lastMessage])
-
-	// init attendance
-	useEffect(() => {
+		console.log({ token })
 		console.log('fetching attendance')
 		fetch(`/api/attendance?token=${token}`)
 			.then(res => res.json())
@@ -60,9 +57,9 @@ export default function Home() {
 			.then(() => console.log('attendance loaded'))
 	}, [token])
 
-	useEffect(() => console.log({ token }), [token])
-
+	// process the incoming message
 	useEffect(() => {
+		console.log({ lastMessage })
 		const dataArray = shouldParse<Diff[]>(lastMessage, [])
 
 		let update: Record<string, number> = {}
@@ -115,25 +112,10 @@ function Table({
 	}>
 	connected: boolean
 }) {
-	const [day, setDay] = useDay(['29', '30'], '29')
-	const [floor, setFloor] = useFloor('1F')
+	const [day, Day] = useDay('29')
+	const [floor, Floor] = useFloor('1F')
 
 	const [appendDiff] = useDiff(updateAttendance)
-
-	// init day and room
-	// useEffect(() => {
-	// 	if (!localStorage) return
-	//
-	// 	let day = localStorage.getItem('day')
-	// 	let room = localStorage.getItem('room')
-	//
-	// 	if (day) {
-	// 		setDay(day)
-	// 	}
-	// 	if (room) {
-	// 		setRoom(room)
-	// 	}
-	// }, [setDay, setRoom])
 
 	let groupedSessions = groupBy(
 		data.sessions.filter(item => new Date(item.start).getDate() == Number(day)),
@@ -150,19 +132,9 @@ function Table({
 	return (
 		<>
 			<div className="text-center my-4">
-				<select value={day} onChange={e => setDay(e.target.value)} className={box()}>
-					<option value={29}>7/29</option>
-					<option value={30}>7/30</option>
-				</select>
+				<Day />
 				的
-				<select value={floor} onChange={e => setFloor(e.target.value)} className={box()}>
-					{Object.keys(floors).map(floor => (
-						<option key={floor} value={floor}>
-							{floor}
-						</option>
-					))}
-				</select>
-				廳
+				<Floor />
 			</div>
 			<hr className="my-4" />
 
