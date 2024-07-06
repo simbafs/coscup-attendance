@@ -11,6 +11,7 @@ import (
 	"backend/middlewares/auth"
 	"embed"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -33,15 +34,14 @@ var (
 
 var log = logger.New("main")
 
-func run(addr string, dbPath string, token string) error {
-	err := db.OpenDB(dbPath)
-	if err != nil {
+func run(addr string, dbPath string, token string, session string, update bool) error {
+	if err := db.OpenDB(dbPath); err != nil {
 		return err
 	}
 	log.Printf("Database connected")
+	defer db.DB.Close()
 
-	err = db.InitDB("https://coscup.org/2023/json/session.json")
-	if err != nil {
+	if err := db.InitDB(session, update); err != nil {
 		return err
 	}
 
@@ -53,6 +53,19 @@ func run(addr string, dbPath string, token string) error {
 
 	io := websocket.Route(r, nil)
 	api.Route(r, io, auth.Auth(auth.Fail401, tokenF))
+
+	r.GET("/session.json", func(c *gin.Context) {
+		session, err := db.GetSessionJSON()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+		c.Data(http.StatusOK, "application/json", session)
+	})
+
 	fileserver.Route(r, static, Mode, mw.Only(auth.Auth(auth.FailLogin, tokenF), "/"))
 
 	log.Printf("Listening at %s\n", addr)
@@ -67,6 +80,8 @@ func main() {
 	version := pflag.BoolP("version", "v", false, "show version")
 	dbPath := pflag.StringP("db", "d", "./data.db", "database path")
 	help := pflag.BoolP("help", "h", false, "show help")
+	session := pflag.StringP("session", "", "https://coscup.org/2023/json/session.json", "session.json url")
+	update := pflag.BoolP("update", "u", false, "update session.json")
 	pflag.StringVarP(&Mode, "mode", "m", Mode, "server mode")
 	pflag.StringVarP(&token, "token", "t", token, "token(ENV: TOKEN)")
 
@@ -84,7 +99,7 @@ func main() {
 
 	addr := fmt.Sprintf("%s:%d", *host, *port)
 
-	if err := run(addr, *dbPath, token); err != nil {
+	if err := run(addr, *dbPath, token, *session, *update); err != nil {
 		log.Printf("Oops, there's an error: %v\n", err)
 		os.Exit(1)
 	}

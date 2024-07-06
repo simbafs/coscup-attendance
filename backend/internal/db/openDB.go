@@ -16,7 +16,3 @@ func OpenDB(path string) error {
 	DB = db
 	return nil
 }
-
-func CloseDB() error {
-	return DB.Close()
-}

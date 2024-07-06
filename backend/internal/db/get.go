@@ -27,3 +27,12 @@ func GetAttendanceData() (AttendanceData, error) {
 
 	return data, nil
 }
+
+func GetSessionJSON() ([]byte, error) {
+	var data []byte
+	err := DB.QueryRow(`SELECT text FROM data WHERE name = 'session.json';`).Scan(&data)
+	if err != nil {
+		return nil, fmt.Errorf("query session: %w", err)
+	}
+	return data, nil
+}

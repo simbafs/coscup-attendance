@@ -12,13 +12,14 @@ export function useDiff(
 		data: Attendance
 		overwrite: boolean
 	}>,
+	token: string,
 ) {
 	const [diff, setDiff] = useState<Diff[]>([])
 	const debuuncedDiff = useDebounce(diff, 300)
 
 	useEffect(() => {
 		if (debuuncedDiff.length == 0) return
-		fetch('/api/attendance', {
+		fetch(`/api/attendance?token=${token}`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

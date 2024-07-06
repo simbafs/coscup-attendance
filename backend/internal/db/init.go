@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -77,22 +76,19 @@ type RawData struct {
 	} `json:"tags"`
 }
 
-// getRawData download session.json if not exist in ../frontend/public/session.json and parse it
-func getRawData(url string) (*RawData, error) {
+// if session.json doesn't exist in db, download from url and save it
+func getRawData(url string, update bool) (*RawData, error) {
+	var jsonStr string
 	var rawData RawData
-	localFile := "../frontend/public/session.json"
-	if _, err := os.Stat(localFile); err == nil {
-		// file exist
-		log.Printf("load session from %s\n", localFile)
 
-		file, err := os.Open(localFile)
-		if err != nil {
-			return nil, fmt.Errorf("os.Open: %w", err)
+	row := DB.QueryRow(`SELECT text FROM data WHERE name = 'session.json';`)
+
+	if err := row.Scan(&jsonStr); err == nil && !update {
+		if err := json.Unmarshal([]byte(jsonStr), &rawData); err != nil {
+			return nil, fmt.Errorf("json.Unmarshal: %w", err)
 		}
-		defer file.Close()
 
-		err = json.NewDecoder(file).Decode(&rawData)
-		return &rawData, err
+		return &rawData, nil
 	}
 
 	log.Printf("download session from %s\n", url)
@@ -102,6 +98,7 @@ func getRawData(url string) (*RawData, error) {
 	if err != nil {
 		return nil, fmt.Errorf("http.Get: %w", err)
 	}
+	defer res.Body.Close()
 
 	resp, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -113,32 +110,36 @@ func getRawData(url string) (*RawData, error) {
 		return nil, fmt.Errorf("json.Unmarshal: %w", err)
 	}
 
-	err = os.WriteFile(localFile, resp, 0644)
-	if err != nil {
-		return nil, fmt.Errorf("os.WriteFile: %w", err)
+	if _, err := DB.Exec(`INSERT OR REPLACE INTO data (name, text) VALUES ('session.json', ?);`, string(resp)); err != nil {
+		return nil, fmt.Errorf("db.Exec: %w", err)
 	}
 
 	return &rawData, nil
 }
 
-func InitDB(url string) error {
+// Init db with session.json from `url`, if `update == true`, update session.json
+func InitDB(url string, update bool) error {
 	_, err := DB.Exec(`
-	    CREATE TABLE IF NOT EXISTS attendance(
-			id         VARCHAR(8) NOT NULL PRIMARY KEY
-			,attendance INTEGER  NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS updates(
-			time       DATETIME NOT NULL PRIMARY KEY 
-			,id         VARCHAR(6) NOT NULL
-			,attendance INTEGER  NOT NULL
-        );
-    `)
+		CREATE TABLE IF NOT EXISTS attendance(
+			id         VARCHAR(8) NOT NULL PRIMARY KEY,
+			attendance INTEGER NOT NULL
+		);
+		CREATE TABLE IF NOT EXISTS updates(
+			time       DATETIME NOT NULL PRIMARY KEY,
+			id         VARCHAR(6) NOT NULL,
+			attendance INTEGER NOT NULL
+		);
+		CREATE TABLE IF NOT EXISTS data(
+			name       VARCHAR(8) NOT NULL PRIMARY KEY,
+		  text       TEXT NOT NULL
+		);
+  `)
 	if err != nil {
 		return fmt.Errorf("crreate table db.Exec: %w", err)
 	}
 	log.Println("create table")
 
-	data, err := getRawData(url)
+	data, err := getRawData(url, update)
 	if err != nil {
 		return fmt.Errorf("getRawData: %w", err)
 	}

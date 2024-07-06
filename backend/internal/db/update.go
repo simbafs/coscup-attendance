@@ -7,7 +7,7 @@ import (
 
 type UpdateData struct {
 	ID         string `json:"id" binding:"required"`
-	Attendance int    `json:"attendance" binding:"required"`
+	Attendance int    `json:"attendance"`
 }
 
 func Update(data []UpdateData) error {
@@ -17,7 +17,7 @@ func Update(data []UpdateData) error {
 	}
 
 	for _, d := range data {
-		_, err := stmt.Exec(d.Attendance, d.ID)
+		_, err = stmt.Exec(d.Attendance, d.ID)
 		if err != nil {
 			return fmt.Errorf("attendance stmt.Exec: %w", err)
 		}

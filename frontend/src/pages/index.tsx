@@ -90,7 +90,13 @@ export default function Home() {
 					<pre>{JSON.stringify(error, null, 2)}</pre>
 				</div>
 			) : data && attendance ? (
-				<Table data={data} attendance={attendance} updateAttendance={updateAttendance} connected={!!socket} />
+				<Table
+					data={data}
+					attendance={attendance}
+					updateAttendance={updateAttendance}
+					connected={!!socket}
+					token={token}
+				/>
 			) : (
 				<div className="text-center my-4">Loading...</div>
 			)}
@@ -103,6 +109,7 @@ function Table({
 	attendance,
 	updateAttendance,
 	connected,
+	token,
 }: {
 	data: Sessions
 	attendance: Attendance
@@ -111,6 +118,7 @@ function Table({
 		overwrite: boolean
 	}>
 	connected: boolean
+	token: string
 }) {
 	const [day, Day] = useDay('29')
 	const [floor, Floor] = useFloor('1F')
@@ -118,7 +126,7 @@ function Table({
 
 	useEffect(() => console.log({ day, floor, time }), [day, floor, time])
 
-	const [appendDiff] = useDiff(updateAttendance)
+	const [appendDiff] = useDiff(updateAttendance, token)
 
 	let groupedSessions = groupBy(
 		data.sessions.filter(item => new Date(item.start).getDate() == Number(day)),
@@ -130,8 +138,8 @@ function Table({
 		// sorted by the room order defined in `floors`
 		const idxA = floors[floor].indexOf(a.room)
 		const idxB = floors[floor].indexOf(b.room)
-		console.log(floors[floor])
-		console.log(a.room, b.room, idxA, idxB)
+		// console.log(floors[floor])
+		// console.log(a.room, b.room, idxA, idxB)
 		return idxA - idxB
 	})
 	groupedSessions.sort((a, b) => {
