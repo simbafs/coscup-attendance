@@ -80,7 +80,7 @@ func main() {
 	version := pflag.BoolP("version", "v", false, "show version")
 	dbPath := pflag.StringP("db", "d", "./data.db", "database path")
 	help := pflag.BoolP("help", "h", false, "show help")
-	session := pflag.StringP("session", "", "https://coscup.org/2023/json/session.json", "session.json url")
+	session := pflag.StringP("session", "", "https://coscup.org/2024/json/session.json", "session.json url")
 	update := pflag.BoolP("update", "u", false, "update session.json")
 	pflag.StringVarP(&Mode, "mode", "m", Mode, "server mode")
 	pflag.StringVarP(&token, "token", "t", token, "token(ENV: TOKEN)")

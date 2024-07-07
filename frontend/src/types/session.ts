@@ -18,18 +18,17 @@ export interface RoomEn {
 
 // TODO: modify this every year
 export const floors = {
-	'1F': ['AU', 'RB 105'],
-	'2F': ['TR 209', 'TR 210', 'TR 211', 'TR 212', 'TR 213', 'TR 214'],
-	'3F': ['TR 310-1', 'TR 311', 'TR 312', 'TR 313'],
-	'4F': ['TR 409-1', 'TR 410', 'TR 411', 'TR 412-1', 'TR 412-2', 'TR 413-1'],
-	'5F': ['TR 509', 'TR 510', 'TR 511', 'TR 512', 'TR 513'],
-	'6F': ['TR 609', 'TR 613', 'TR 614', 'TR 615', 'TR 616'],
+	'1F': ['RB102', 'RB105'],
+	'2F': ['TR211', 'TR212', 'TR213', 'TR214'],
+	'4F': ['TR409-2', 'TR410', 'TR412-1', 'TR412-2', 'TR413-1'],
+	'5F': ['TR510', 'TR511', 'TR512', 'TR513'],
+	'6F': ['TR610', 'TR614', 'TR615'],
 }
 
 // TODO: modify this every year
 export const days = {
-	'29': '7/29',
-	'30': '7/30',
+	'3': '8/3',
+	'4': '8/4',
 }
 
 export type Floors = typeof floors

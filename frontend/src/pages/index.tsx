@@ -120,9 +120,9 @@ function Table({
 	connected: boolean
 	token: string
 }) {
-	const [day, Day] = useDay('29')
+	const [day, Day] = useDay('3')
 	const [floor, Floor] = useFloor('1F')
-	const [time, Time] = useTime({ hour: 8, minute: 50 })
+	const [time, Time] = useTime({ hour: 10, minute: 0 })
 
 	useEffect(() => console.log({ day, floor, time }), [day, floor, time])
 
@@ -132,6 +132,8 @@ function Table({
 		data.sessions.filter(item => new Date(item.start).getDate() == Number(day)),
 		s => getFloor(s.room) || '1F',
 	)[floor]
+
+	if (!groupedSessions) groupedSessions = []
 
 	groupedSessions.sort((a, b) => {
 		const timeA = new Date(a.start).getTime()
