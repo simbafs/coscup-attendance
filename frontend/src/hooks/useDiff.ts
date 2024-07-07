@@ -31,7 +31,7 @@ export function useDiff(
 			.catch(console.error)
 			.finally(() => setDiff([]))
 		// .then(setAttendance)
-	}, [debuuncedDiff])
+	}, [debuuncedDiff, token])
 
 	const appendDiff = (update: Diff) => {
 		setDiff(diff =>

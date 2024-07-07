@@ -1,13 +1,13 @@
-import useLocalStorageReducer from '@/hooks/useLocalStorageReducer'
+import { useQueryReducer } from '@/hooks/useLocalStorageReducer'
 import { floors, days, Day, Floor } from '@/types/session'
 import box from '@/variants/box'
 
 export function useDay(defaultDay: Day) {
-	const [day, setDay] = useLocalStorageReducer<string, string>(
+	const [day, setDay] = useQueryReducer<Day, string>(
 		'day',
 		(oldDay, newDay) => {
 			if (Object.keys(days).includes(newDay)) {
-				return newDay
+				return newDay as Day
 			}
 			return oldDay
 		},
@@ -44,7 +44,7 @@ export function useDay(defaultDay: Day) {
 // }
 
 export function useFloor(defaultFloor: Floor) {
-	const [floor, setFloor] = useLocalStorageReducer<Floor, string>(
+	const [floor, setFloor] = useQueryReducer<Floor, string>(
 		'floor',
 		(oldFloor, newFloor) => {
 			if (newFloor in floors) {
@@ -76,7 +76,7 @@ export type Time = {
 }
 
 export function useTime(defaultTime: Time) {
-	const [time, setTime] = useLocalStorageReducer<Time, string>(
+	const [time, setTime] = useQueryReducer<Time, string>(
 		'time',
 		(oldTime, newTime) => {
 			const [hour, minute] = newTime.split(':').map(Number)
@@ -90,6 +90,16 @@ export function useTime(defaultTime: Time) {
 			}
 		},
 		defaultTime,
+		{
+			encoder: time => `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`,
+			decoder: str => {
+				const [hour, minute] = str.split(':').map(Number)
+				return {
+					hour,
+					minute,
+				}
+			},
+		},
 	)
 
 	return [

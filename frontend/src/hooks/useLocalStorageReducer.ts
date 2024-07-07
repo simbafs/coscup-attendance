@@ -1,18 +1,59 @@
-import { useReducer } from 'react'
-import { shouldParse } from '@/libs/util'
+import { useCallback, useEffect, useReducer } from 'react'
+import { useRouter } from 'next/router'
 
-export default function useLocalStorageReducer<T, V>(
+export function useQueryReducer<T, U>(
 	key: string,
-	reducer: (value: T, update: V) => T,
+	reducer: (value: T, update: U) => T,
 	initial: T,
-): [T, (update: V) => void] {
-	const oldData = localStorage.getItem(key)
-	const data = oldData ? shouldParse(oldData, initial) : initial
-	localStorage.setItem(key, JSON.stringify(data))
-	const [value, updateValue] = useReducer((value: T, update: V) => {
+	opt?: {
+		decoder: (value: string) => T
+		encoder: (value: T) => string
+	},
+) {
+	let decoder = opt?.decoder || ((value: string) => value as unknown as T)
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	let encoder = opt?.encoder || ((value: T) => value as unknown as string)
+
+	const router = useRouter()
+
+	let oldData = router.query[key]
+	if (!oldData) oldData = encoder(initial)
+	else if (Array.isArray(oldData)) oldData = oldData[0]
+
+	const setQuery = useCallback(
+		(value: T) => {
+			router.push(
+				{
+					query: {
+						...router.query,
+						[key]: encoder(value),
+					},
+				},
+				undefined,
+				{ shallow: true },
+			)
+		},
+		[encoder, key, router],
+	)
+
+	useEffect(() => {
+		if (!router.query[key]) {
+			setQuery(initial)
+		}
+	}, [initial, key, router.query, setQuery])
+
+	return useReducer((value: T, update: U) => {
 		const next = reducer(value, update)
-		localStorage.setItem(key, JSON.stringify(next))
+		router.push(
+			{
+				query: {
+					...router.query,
+					[key]: encoder(next),
+				},
+			},
+			undefined,
+			{ shallow: true },
+		)
 		return next
-	}, data)
-	return [value, updateValue]
+	}, decoder(oldData))
 }

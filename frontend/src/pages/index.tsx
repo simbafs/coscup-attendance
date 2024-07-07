@@ -122,7 +122,7 @@ function Table({
 }) {
 	const [day, Day] = useDay('29')
 	const [floor, Floor] = useFloor('1F')
-	const [time, Time] = useTime({ hour: 0, minute: 0 })
+	const [time, Time] = useTime({ hour: 8, minute: 50 })
 
 	useEffect(() => console.log({ day, floor, time }), [day, floor, time])
 
@@ -133,7 +133,11 @@ function Table({
 		s => getFloor(s.room) || '1F',
 	)[floor]
 
-	// major sort by time, secondary sort by room order, this require > ECMAScript 2019
+	groupedSessions.sort((a, b) => {
+		const timeA = new Date(a.start).getTime()
+		const timeB = new Date(b.start).getTime()
+		return timeA - timeB
+	})
 	groupedSessions.sort((a, b) => {
 		// sorted by the room order defined in `floors`
 		const idxA = floors[floor].indexOf(a.room)
@@ -141,11 +145,6 @@ function Table({
 		// console.log(floors[floor])
 		// console.log(a.room, b.room, idxA, idxB)
 		return idxA - idxB
-	})
-	groupedSessions.sort((a, b) => {
-		const timeA = new Date(a.start).getTime()
-		const timeB = new Date(b.start).getTime()
-		return timeA - timeB
 	})
 
 	groupedSessions = groupedSessions.filter(s => {
