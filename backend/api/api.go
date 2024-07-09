@@ -1,6 +1,7 @@
 package api
 
 import (
+	"backend/internal/cors"
 	"backend/internal/db"
 	"backend/internal/websocket"
 	"encoding/json"
@@ -22,6 +23,7 @@ func errorRes(c *gin.Context, err error) {
 
 func Route(r *gin.Engine, io websocket.IO, auth gin.HandlerFunc) {
 	api := r.Group("/api")
+	api.Use(cors.Cors)
 
 	api.GET("/attendance", func(c *gin.Context) {
 		attendance, err := db.GetAttendanceData()
@@ -71,11 +73,17 @@ func Route(r *gin.Engine, io websocket.IO, auth gin.HandlerFunc) {
 		})
 	})
 
-	api.GET("/broadcast", func(c *gin.Context) {
-		io.Broadcast([]byte("Hello, world!"))
+	api.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"status":  "ok",
-			"message": "Broadcasted!",
+			"status": "ok",
 		})
 	})
+
+	// api.GET("/broadcast", func(c *gin.Context) {
+	// 	io.Broadcast([]byte("Hello, world!"))
+	// 	c.JSON(http.StatusOK, gin.H{
+	// 		"status":  "ok",
+	// 		"message": "Broadcasted!",
+	// 	})
+	// })
 }
