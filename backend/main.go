@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/api"
+	"backend/internal/cors"
 	"backend/internal/db"
 	"backend/internal/fileserver"
 	"backend/internal/logger"
@@ -46,13 +47,14 @@ func run(addr string, dbPath string, token string, session string, update bool) 
 	}
 
 	tokenF := auth.Token(token)
+	c := cors.Cors(Mode)
 
 	gin.SetMode(Mode)
 	r := gin.Default()
 	r.Use(gin.Recovery())
 
 	io := websocket.Route(r, nil)
-	api.Route(r, io, auth.Auth(auth.Fail401, tokenF))
+	api.Route(r.Group("/api").Use(c), io, auth.Auth(auth.Fail401, tokenF))
 
 	r.GET("/session.json", func(c *gin.Context) {
 		session, err := db.GetSessionJSON()

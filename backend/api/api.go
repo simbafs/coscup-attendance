@@ -1,7 +1,6 @@
 package api
 
 import (
-	"backend/internal/cors"
 	"backend/internal/db"
 	"backend/internal/websocket"
 	"encoding/json"
@@ -21,10 +20,7 @@ func errorRes(c *gin.Context, err error) {
 	})
 }
 
-func Route(r *gin.Engine, io websocket.IO, auth gin.HandlerFunc) {
-	api := r.Group("/api")
-	api.Use(cors.Cors)
-
+func Route(api gin.IRoutes, io websocket.IO, auth gin.HandlerFunc) {
 	api.GET("/attendance", func(c *gin.Context) {
 		attendance, err := db.GetAttendanceData()
 		if err != nil {
