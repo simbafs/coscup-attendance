@@ -46,6 +46,11 @@ func run(addr string, dbPath string, token string, session string, update bool) 
 		return err
 	}
 
+	if update {
+		log.Printf("session.json updated")
+		return nil
+	}
+
 	tokenF := auth.Token(token)
 	c := cors.Cors(Mode)
 

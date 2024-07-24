@@ -18,11 +18,12 @@ export interface RoomEn {
 
 // TODO: modify this every year
 export const floors = {
-	'1F': ['RB102', 'RB105'],
-	'2F': ['TR211', 'TR212', 'TR213', 'TR214'],
-	'4F': ['TR409-2', 'TR410', 'TR412-1', 'TR412-2', 'TR413-1'],
-	'5F': ['TR510', 'TR511', 'TR512', 'TR513'],
-	'6F': ['TR610', 'TR614', 'TR615'],
+	'1F': ['RB101', 'RB102', 'RB105'],
+	'2F': ['TR209', 'TR210', 'TR211', 'TR212', 'TR213', 'TR214'],
+	'3F': ['TR313'],
+	'4F': ['TR409-2', 'TR410', 'TR411', 'TR412-1', 'TR412-2', 'TR413-1'],
+	'5F': ['TR510', 'TR511', 'TR512', 'TR513', 'TR514'],
+	'6F': ['TR609', 'TR610', 'TR611', 'TR613', 'TR614', 'TR615', 'TR616'],
 }
 
 // TODO: modify this every year
