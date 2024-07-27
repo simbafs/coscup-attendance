@@ -1,4 +1,4 @@
-import { useQueryReducer } from '@/hooks/useLocalStorageReducer'
+import { useQueryReducer } from './useQuery'
 import { floors, days, Day, Floor } from '@/types/session'
 import box from '@/variants/box'
 
@@ -27,21 +27,6 @@ export function useDay(defaultDay: Day) {
 		),
 	] as const
 }
-
-// export function useRoom(rooms: string[], defaultRoom: string) {
-// 	const [room, setRoom] = useLocalStorageReducer<string, string>(
-// 		'room',
-// 		(oldRoom, newRoom) => {
-// 			if (rooms.includes(newRoom)) {
-// 				return newRoom
-// 			}
-// 			return oldRoom
-// 		},
-// 		defaultRoom,
-// 	)
-//
-// 	return [room, setRoom] as const
-// }
 
 export function useFloor(defaultFloor: Floor) {
 	const [floor, setFloor] = useQueryReducer<Floor, string>(
