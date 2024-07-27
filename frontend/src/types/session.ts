@@ -1,3 +1,52 @@
+export type Floors = Record<string, string[]>
+export type Floor = keyof Floors
+export type Days = Record<string, string>
+export type Day = keyof Days
+
+let floors: Floors = {}
+let days: Days = {}
+
+export { floors, days }
+
+export function initFloors(data: Sessions) {
+	const rooms = Array.from(new Set(data.sessions.map(s => s.room)))
+	rooms.sort((a, b) => Number(a[2]) - Number(b[2]))
+
+	const floorKeys = Array.from(new Set(rooms.map(r => r[2])))
+	floors = floorKeys.reduce((acc, key) => {
+		const f = `${key}F`
+		acc[f] = rooms.filter(r => r[2] === key)
+		return acc
+	}, floors)
+}
+
+export function formatDay(day: string) {
+	const date = new Date(day)
+	const dayStr = `${date.getMonth() + 1}/${date.getDate()}`
+	return dayStr
+}
+
+export function initDays(data: Sessions) {
+	const d = Array.from(new Set(data.sessions.map(s => s.start)))
+	d.sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+
+	days = d.reduce((acc, day) => {
+		const dayStr = formatDay(day)
+		acc[dayStr] = dayStr
+		return acc
+	}, days)
+}
+
+export function getFloor(roomId: string) {
+	for (const [floor, rooms] of Object.entries(floors)) {
+		if (rooms.includes(roomId)) {
+			return floor
+		}
+	}
+	return null // Return null if the roomId is not found in any floor
+}
+
+// Type definitions for the sessions.json file
 export interface Sessions {
 	sessions: Session[]
 	speakers: Speaker[]
@@ -14,36 +63,6 @@ export interface Room {
 
 export interface RoomEn {
 	name: string
-}
-
-// TODO: modify this every year
-export const floors = {
-	'1F': ['RB101', 'RB102', 'RB105'],
-	'2F': ['TR209', 'TR210', 'TR211', 'TR212', 'TR213', 'TR214'],
-	'3F': ['TR313'],
-	'4F': ['TR409-2', 'TR410', 'TR411', 'TR412-1', 'TR412-2', 'TR413-1'],
-	'5F': ['TR510', 'TR511', 'TR512', 'TR513', 'TR514'],
-	'6F': ['TR609', 'TR610', 'TR611', 'TR613', 'TR614', 'TR615', 'TR616'],
-}
-
-// TODO: modify this every year
-export const days = {
-	'3': '8/3',
-	'4': '8/4',
-}
-
-export type Floors = typeof floors
-export type Floor = keyof Floors
-export type Days = typeof days
-export type Day = keyof Days
-
-export function getFloor(roomId: string) {
-	for (const [floor, rooms] of Object.entries(floors)) {
-		if (rooms.includes(roomId)) {
-			return floor
-		}
-	}
-	return null // Return null if the roomId is not found in any floor
 }
 
 export interface Session {

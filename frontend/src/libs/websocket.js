@@ -6,8 +6,7 @@ function setIO(ioParam) {
 	console.log('setup websocket server')
 
 	global.io.use((socket, next) => {
-		if (!auth(socket.handshake.auth.token))
-			return next(new Error('unauthorized'))
+		if (!auth(socket.handshake.auth.token)) return next(new Error('unauthorized'))
 		next()
 	})
 
@@ -31,7 +30,7 @@ function setIO(ioParam) {
 				'echo',
 				JSON.stringify({
 					echo: data,
-				})
+				}),
 			)
 		})
 

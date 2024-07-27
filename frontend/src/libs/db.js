@@ -52,9 +52,7 @@ export default async function NewDB(file, whenUpdate) {
 					throw Error('invalid diff')
 				}
 				db.diffs.push(diff)
-				db.attendance[diff.day][diff.room][diff.id] = Number(
-					diff.attendance
-				)
+				db.attendance[diff.day][diff.room][diff.id] = Number(diff.attendance)
 			}
 
 			return saveData(file, db).then(() => {

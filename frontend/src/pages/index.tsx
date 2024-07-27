@@ -8,7 +8,7 @@ import { useDay, useFloor, useTime } from '@/hooks/useParams'
 // others
 import box from '@/variants/box'
 import { Diff, useDiff } from '@/hooks/useDiff'
-import { Sessions, Session as TSession, floors, getFloor } from '@/types/session'
+import { Sessions, Session as TSession, floors, getFloor, initFloors, initDays, days, formatDay } from '@/types/session'
 import { Attendance } from '@/types/attendance'
 import { twMerge } from 'tailwind-merge'
 import { shouldParse } from '@/libs/util'
@@ -17,7 +17,16 @@ export default function Home() {
 	const token = useRouter().query.token as string
 
 	const { socket, lastMessage } = useWS('ws://localhost:3000/ws')
-	const { data, error } = useSWR<Sessions>(`/session.json`, url => fetch(url).then(res => res.json()))
+	const { data, error } = useSWR<Sessions>(`/session.json`, url =>
+		fetch(url)
+			.then(res => res.json())
+			.then(data => {
+				initFloors(data)
+				initDays(data)
+				console.log(floors, days)
+				return data
+			}),
+	)
 	const [attendance, updateAttendance] = useReducer(
 		(
 			state: Attendance,
@@ -120,8 +129,8 @@ function Table({
 	connected: boolean
 	token: string
 }) {
-	const [day, Day] = useDay('3')
-	const [floor, Floor] = useFloor('1F')
+	const [day, Day] = useDay(Object.keys(days)[0])
+	const [floor, Floor] = useFloor(Object.keys(floors)[0])
 	const [time, Time] = useTime({ hour: 10, minute: 0 })
 
 	useEffect(() => console.log({ day, floor, time }), [day, floor, time])
@@ -129,7 +138,7 @@ function Table({
 	const [appendDiff] = useDiff(updateAttendance, token)
 
 	let groupedSessions = groupBy(
-		data.sessions.filter(item => new Date(item.start).getDate() == Number(day)),
+		data.sessions.filter(item => formatDay(item.start) == day),
 		s => getFloor(s.room) || '1F',
 	)[floor]
 
