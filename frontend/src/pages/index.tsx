@@ -1,22 +1,18 @@
 // hooks
-import { useReducer, useEffect } from 'react'
+import { useEffect } from 'react'
 import useSWR from 'swr'
-import useWS from '@/hooks/useWS'
-import { useRouter } from 'next/router'
 import { useDay, useFloor, useTime } from '@/hooks/useParams'
 
 // others
 import box from '@/variants/box'
-import { Diff, useDiff } from '@/hooks/useDiff'
+import { useDiff } from '@/hooks/useDiff'
 import { Sessions, Session as TSession, floors, getFloor, initFloors, initDays, days, formatDay } from '@/types/session'
 import { Attendance } from '@/types/attendance'
 import { twMerge } from 'tailwind-merge'
-import { shouldParse } from '@/libs/util'
+import { useToken } from '@/hooks/useToken'
+import { useAttendance } from '@/hooks/useAttendance'
 
 export default function Home() {
-	const token = useRouter().query.token as string
-
-	const { socket, lastMessage } = useWS('ws://localhost:3000/ws')
 	const { data, error } = useSWR<Sessions>(`/session.json`, url =>
 		fetch(url)
 			.then(res => res.json())
@@ -27,64 +23,11 @@ export default function Home() {
 				return data
 			}),
 	)
-	const [attendance, updateAttendance] = useReducer(
-		(
-			state: Attendance,
-			action: {
-				data: Attendance
-				overwrite: boolean
-			},
-		) => {
-			if (action.overwrite) {
-				return action.data
-			}
-			if (!state) return state
-
-			const r = { ...state, ...action.data }
-			// r[action.id] = Number(action.attendance)
-			return r
-		},
-		{},
-	)
-
-	// get initial attendance
-	useEffect(() => {
-		console.log({ token })
-		console.log('fetching attendance')
-		fetch(`/api/attendance?token=${token}`)
-			.then(res => res.json())
-			.then(data => {
-				console.log('!!!', data)
-				return data
-			})
-			.then(data =>
-				updateAttendance({
-					data: data.attendance,
-					overwrite: true,
-				}),
-			)
-			.then(() => console.log('attendance loaded'))
-	}, [token])
-
-	// process the incoming message
-	useEffect(() => {
-		console.log({ lastMessage })
-		const dataArray = shouldParse<Diff[]>(lastMessage, [])
-
-		let update: Record<string, number> = {}
-		for (let data of dataArray) {
-			update[data.id] = data.attendance
-		}
-
-		updateAttendance({
-			data: update,
-			overwrite: false,
-		})
-	}, [lastMessage])
+	const { isConnected, attendance, updateAttendance } = useAttendance()
 
 	return (
 		<>
-			{socket ? (
+			{isConnected ? (
 				<p className="text-green-500" key="connect">
 					Connected
 				</p>
@@ -103,8 +46,7 @@ export default function Home() {
 					data={data}
 					attendance={attendance}
 					updateAttendance={updateAttendance}
-					connected={!!socket}
-					token={token}
+					connected={isConnected}
 				/>
 			) : (
 				<div className="text-center my-4">Loading...</div>
@@ -118,7 +60,6 @@ function Table({
 	attendance,
 	updateAttendance,
 	connected,
-	token,
 }: {
 	data: Sessions
 	attendance: Attendance
@@ -127,15 +68,15 @@ function Table({
 		overwrite: boolean
 	}>
 	connected: boolean
-	token: string
 }) {
+	const token = useToken()
 	const [day, Day] = useDay(Object.keys(days)[0])
 	const [floor, Floor] = useFloor(Object.keys(floors)[0])
 	const [time, Time] = useTime({ hour: 10, minute: 0 })
 
 	useEffect(() => console.log({ day, floor, time }), [day, floor, time])
 
-	const [appendDiff] = useDiff(updateAttendance, token)
+	const appendDiff = useDiff(updateAttendance, token)
 
 	let groupedSessions = groupBy(
 		data.sessions.filter(item => formatDay(item.start) == day),

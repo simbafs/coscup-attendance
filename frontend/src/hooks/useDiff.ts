@@ -54,5 +54,5 @@ export function useDiff(
 		})
 	}
 
-	return [appendDiff] as const
+	return appendDiff
 }
