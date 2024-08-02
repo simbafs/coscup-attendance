@@ -1,6 +1,6 @@
 // hooks
 import { useEffect } from 'react'
-import useSWR from 'swr'
+import useSWRImmutable from 'swr/immutable'
 import { useDay, useFloor, useTime } from '@/hooks/useParams'
 
 // others
@@ -13,7 +13,7 @@ import { useToken } from '@/hooks/useToken'
 import { useAttendance } from '@/hooks/useAttendance'
 
 export default function Home() {
-	const { data, error } = useSWR<Sessions>(`/session.json`, url =>
+	const { data, error } = useSWRImmutable<Sessions>(`/session.json`, url =>
 		fetch(url)
 			.then(res => res.json())
 			.then(data => {
