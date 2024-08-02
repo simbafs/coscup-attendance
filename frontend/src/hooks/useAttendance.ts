@@ -4,11 +4,14 @@ import { useToken } from './useToken'
 import useWS from './useWS'
 import { shouldParse } from '@/libs/util'
 import { Diff } from './useDiff'
+import { useOrigin } from './useOrigin'
 
 // useAttendance get init value of attendance from server and listen to websocket for updates
 export function useAttendance() {
 	const token = useToken()
-	const { socket, lastMessage } = useWS(`ws://localhost:3000/ws?token=${token}`)
+	const wsURL = useOrigin().replace('http', 'ws') + '/ws?token=' + token
+	console.log({ wsURL })
+	const { socket, lastMessage } = useWS(wsURL)
 	const [attendance, updateAttendance] = useReducer(
 		(
 			state: Attendance,
