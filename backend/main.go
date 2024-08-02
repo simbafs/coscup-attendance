@@ -85,7 +85,7 @@ func main() {
 	host := pflag.StringP("host", "", "0.0.0.0", "server host")
 	port := pflag.IntP("port", "p", 3000, "server port")
 	version := pflag.BoolP("version", "v", false, "show version")
-	dbPath := pflag.StringP("db", "d", "./data.db", "database path")
+	dbPath := pflag.StringP("db", "d", "./data/data.db", "database path")
 	help := pflag.BoolP("help", "h", false, "show help")
 	session := pflag.StringP("session", "", "https://coscup.org/2024/json/session.json", "session.json url")
 	update := pflag.BoolP("update", "u", false, "update session.json")
