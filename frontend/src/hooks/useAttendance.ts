@@ -68,7 +68,7 @@ export function useAttendance() {
 	}, [lastMessage])
 
 	return {
-		isConnected: !!socket,
+		isConnected: socket?.readyState === WebSocket.OPEN,
 		attendance,
 		updateAttendance,
 	}
