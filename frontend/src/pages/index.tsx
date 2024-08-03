@@ -1,7 +1,7 @@
 // hooks
 import { useEffect } from 'react'
 import useSWRImmutable from 'swr/immutable'
-import { useDay, useFloor, useTime } from '@/hooks/useParams'
+import { empty, useDay, useFloor, useTime } from '@/hooks/useParams'
 
 // others
 import box from '@/variants/box'
@@ -11,6 +11,8 @@ import { Attendance } from '@/types/attendance'
 import { twMerge } from 'tailwind-merge'
 import { useToken } from '@/hooks/useToken'
 import { useAttendance } from '@/hooks/useAttendance'
+
+const f = Object.values(floors).reduce((acc, item) => acc.concat(item), [])
 
 export default function Home() {
 	const { data, error } = useSWRImmutable<Sessions>(`/session.json`, url =>
@@ -72,16 +74,17 @@ function Table({
 	const token = useToken()
 	const [day, Day] = useDay(Object.keys(days)[0])
 	const [floor, Floor] = useFloor(Object.keys(floors)[0])
-	const [time, Time] = useTime({ hour: 10, minute: 0 })
+	const [time, Time] = useTime({ hour: 10, minute: 0, empty: true })
 
 	useEffect(() => console.log({ day, floor, time }), [day, floor, time])
 
 	const appendDiff = useDiff(updateAttendance, token)
 
-	let groupedSessions = groupBy(
-		data.sessions.filter(item => formatDay(item.start) == day),
-		s => getFloor(s.room) || '1F',
-	)[floor]
+	// if parameter day is not empty, filter the sessions by day
+	let groupedSessions = day === empty ? data.sessions : data.sessions.filter(item => formatDay(item.start) == day)
+
+	// if parameter floor is not empty, filter the sessions
+	if (floor !== empty) groupedSessions = groupBy(groupedSessions, s => getFloor(s.room) || '1F')[floor]
 
 	if (!groupedSessions) groupedSessions = []
 
@@ -90,26 +93,39 @@ function Table({
 		const timeB = new Date(b.start).getTime()
 		return timeA - timeB
 	})
-	groupedSessions.sort((a, b) => {
-		// sorted by the room order defined in `floors`
-		const idxA = floors[floor].indexOf(a.room)
-		const idxB = floors[floor].indexOf(b.room)
-		// console.log(floors[floor])
-		// console.log(a.room, b.room, idxA, idxB)
-		return idxA - idxB
-	})
 
-	groupedSessions = groupedSessions.filter(s => {
-		if (time.invalid) return true
-		const startHour = new Date(s.start).getHours()
-		const startMinute = new Date(s.start).getMinutes()
-		const endHour = new Date(s.end).getHours()
-		const endMinute = new Date(s.end).getMinutes()
-		return (
-			(time.hour > startHour || (time.hour == startHour && time.minute >= startMinute)) &&
-			(time.hour < endHour || (time.hour == endHour && time.minute <= endMinute))
-		)
-	})
+	if (floor === empty) {
+		groupedSessions.sort((a, b) => {
+			// sorted by the room order defined in `floors`
+			const idxA = f.indexOf(a.room)
+			const idxB = f.indexOf(b.room)
+			// console.log(floors[floor])
+			// console.log(a.room, b.room, idxA, idxB)
+			return idxA - idxB
+		})
+	} else {
+		groupedSessions.sort((a, b) => {
+			// sorted by the room order defined in `floors`
+			const idxA = floors[floor].indexOf(a.room)
+			const idxB = floors[floor].indexOf(b.room)
+			// console.log(floors[floor])
+			// console.log(a.room, b.room, idxA, idxB)
+			return idxA - idxB
+		})
+	}
+
+	// if parameter time is not valid, show all sessions
+	if (!time.empty)
+		groupedSessions = groupedSessions.filter(s => {
+			const startHour = new Date(s.start).getHours()
+			const startMinute = new Date(s.start).getMinutes()
+			const endHour = new Date(s.end).getHours()
+			const endMinute = new Date(s.end).getMinutes()
+			return (
+				(time.hour > startHour || (time.hour == startHour && time.minute >= startMinute)) &&
+				(time.hour < endHour || (time.hour == endHour && time.minute <= endMinute))
+			)
+		})
 
 	return (
 		<>
@@ -120,7 +136,6 @@ function Table({
 				<Floor />
 				時間
 				<Time />
-				（清除以顯示全部）
 			</div>
 
 			<div className="grid grid-cols-[minmax(100px,1fr)_1fr_3fr] md:grid-cols-6 mx-4 gap-2 md:mx-20">
