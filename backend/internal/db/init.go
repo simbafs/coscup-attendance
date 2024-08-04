@@ -11,30 +11,32 @@ import (
 
 var log = logger.New("db")
 
+type Session struct {
+	ID       string    `json:"id"`
+	Type     string    `json:"type"`
+	Room     string    `json:"room"`
+	Start    time.Time `json:"start"`
+	End      time.Time `json:"end"`
+	Language string    `json:"language"`
+	Zh       struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+	} `json:"zh"`
+	En struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+	} `json:"en"`
+	Speakers []string    `json:"speakers"`
+	Tags     []string    `json:"tags"`
+	CoWrite  string      `json:"co_write"`
+	Qa       interface{} `json:"qa"`
+	Slide    interface{} `json:"slide"`
+	Record   interface{} `json:"record"`
+	URI      string      `json:"uri"`
+}
+
 type RawData struct {
-	Sessions []struct {
-		ID       string    `json:"id"`
-		Type     string    `json:"type"`
-		Room     string    `json:"room"`
-		Start    time.Time `json:"start"`
-		End      time.Time `json:"end"`
-		Language string    `json:"language"`
-		Zh       struct {
-			Title       string `json:"title"`
-			Description string `json:"description"`
-		} `json:"zh"`
-		En struct {
-			Title       string `json:"title"`
-			Description string `json:"description"`
-		} `json:"en"`
-		Speakers []string    `json:"speakers"`
-		Tags     []string    `json:"tags"`
-		CoWrite  string      `json:"co_write"`
-		Qa       interface{} `json:"qa"`
-		Slide    interface{} `json:"slide"`
-		Record   interface{} `json:"record"`
-		URI      string      `json:"uri"`
-	} `json:"sessions"`
+	Sessions []Session `json:"sessions"`
 	Speakers []struct {
 		ID     string `json:"id"`
 		Avatar string `json:"avatar"`

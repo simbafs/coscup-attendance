@@ -75,6 +75,18 @@ func Route(api gin.IRoutes, io websocket.IO, auth gin.HandlerFunc) {
 		})
 	})
 
+	api.GET("export.csv", func(c *gin.Context) {
+		c.Header("Content-Disposition", "attachment; filename=export.csv")
+		c.Header("Content-Type", "text/csv")
+		err := db.Export(c.Writer)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  "error",
+				"message": err.Error(),
+			})
+		}
+	})
+
 	// api.GET("/broadcast", func(c *gin.Context) {
 	// 	io.Broadcast([]byte("Hello, world!"))
 	// 	c.JSON(http.StatusOK, gin.H{
